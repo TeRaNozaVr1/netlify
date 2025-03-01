@@ -28,12 +28,17 @@ document.addEventListener("DOMContentLoaded", async function () {
                 localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
             }
         } else {
-            console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
+            console.log("⚠️ Phantom не знайдено. Використовуємо deeplink...");
 
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                // ✅ Фіксований deeplink для Phantom Mobile
-                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
+                // 📲 **Оновлений deeplink для відкриття у додатку Phantom**
+                const deeplink = `phantom://ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
                 window.location.href = deeplink;
+
+                // ⏳ Чекаємо 2 секунди, якщо не відкрився додаток → відкриваємо браузерну версію
+                setTimeout(() => {
+                    window.location.href = "https://phantom.app/";
+                }, 2000);
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
                 window.open("https://phantom.app/", "_blank");
@@ -56,5 +61,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     checkWalletAfterRedirect();
 });
+
 
 
