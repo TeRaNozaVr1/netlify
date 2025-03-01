@@ -5,15 +5,24 @@ document.addEventListener("DOMContentLoaded", async function () {
     async function connectWallet(autoConnect = false) {
         if (window.solana && window.solana.isPhantom) {
             try {
+                // 🔹 **Запитуємо дозвіл на доступ до гаманця**
                 const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
 
                 if (response.publicKey) {
                     const walletAddress = response.publicKey.toString();
 
-                    // ✅ Зберігаємо адресу гаманця
+                    // 🔹 **Зберігаємо адресу гаманця**
                     localStorage.setItem("phantomWallet", walletAddress);
 
-                    // ✅ Оновлюємо UI
+                    // 🔹 **Запит на дозвіл переглядати баланс і транзакції**
+                    const permissions = await window.solana.request({
+                        method: "connect",
+                        params: { permissions: ["signAndSendTransaction", "viewBalance", "viewTransactions"] }
+                    });
+
+                    console.log("✅ Дозволи отримано:", permissions);
+
+                    // 🔹 **Оновлюємо UI**
                     walletStatus.textContent = `Connected: ${walletAddress}`;
                     connectWalletBtn.textContent = "Wallet Connected";
                     connectWalletBtn.disabled = true;
@@ -34,7 +43,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 // 📲 **Оновлений deeplink для відкриття у додатку Phantom**
                 const deeplink = `phantom://ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
                 
-                // ❗️ Використовуємо прихований iframe для кращого виклику додатку
+                // ❗️ Використовуємо прихований iframe для точного виклику
                 let iframe = document.createElement("iframe");
                 iframe.style.display = "none";
                 iframe.src = deeplink;
@@ -66,5 +75,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     checkWalletAfterRedirect();
 });
+
 
 
