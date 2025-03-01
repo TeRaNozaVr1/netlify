@@ -130,20 +130,10 @@
     <div class="popup" id="walletPopup">
         <span class="close-btn" onclick="closePopup()">&times;</span>
         <p>Select Wallet:</p>
-     <button id="connectPhantom">Підключити Phantom</button>
-<button id="connectSolflare">Підключити Solflare</button>
+        <button onclick="connectWallet('phantom')">Phantom</button>
+        <button onclick="connectWallet('solflare')">Solflare</button>
     </div>
-    <script>
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("connectPhantom")?.addEventListener("click", () => {
-        connectWallet("phantom");
-    });
 
-    document.getElementById("connectSolflare")?.addEventListener("click", () => {
-        connectWallet("solflare");
-    });
-});
-    </script>
     <script src="app.js"></script>
 </body>
 </html>
