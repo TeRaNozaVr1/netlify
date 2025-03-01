@@ -15,6 +15,7 @@ const walletStatus = document.getElementById("walletStatus");
 const exchangeBtn = document.getElementById("exchangeBtn");
 const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
+const walletSelect = document.getElementById("walletSelect");
 
 // Функция для определения мобильного устройства
 function isMobile() {
@@ -22,10 +23,10 @@ function isMobile() {
 }
 
 // Определяем доступные кошельки
-const getWallet = () => {
-    if (window.phantom?.solana?.isPhantom) {
+const getWallet = (walletType) => {
+    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
         return window.phantom.solana;
-    } else if (window.solflare?.isSolflare) {
+    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
         return window.solflare;
     }
     return null;
@@ -33,12 +34,14 @@ const getWallet = () => {
 
 // Подключение кошелька
 connectWalletBtn.addEventListener("click", async () => {
-    let wallet = getWallet();
+    const selectedWallet = walletSelect.value;
+    let wallet = getWallet(selectedWallet);
 
     if (!wallet) {
         if (isMobile()) {
             // Открываем приложение кошелька
-            window.open("https://phantom.app/ul/browse", "_blank");
+            const walletUrl = selectedWallet === "phantom" ? "https://phantom.app/ul/browse" : "https://solflare.com/";
+            window.open(walletUrl, "_blank");
             return;
         } else {
             alert("Будь ласка, встановіть Phantom Wallet або Solflare");
@@ -53,7 +56,6 @@ connectWalletBtn.addEventListener("click", async () => {
         console.log("Помилка підключення:", err);
     }
 });
-
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
