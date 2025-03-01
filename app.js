@@ -1,28 +1,25 @@
-const { Connection, PublicKey } = solanaWeb3;
-
 const endpoint = "https://api.mainnet-beta.solana.com";
 const connection = new Connection(endpoint, "confirmed");
 
-// UI елементи
+// Адреса гаманців
+const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
+const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
+const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
+
+// UI Елементи
 const connectWalletBtn = document.getElementById("connectWalletBtn");
 const walletStatus = document.getElementById("walletStatus");
+const exchangeBtn = document.getElementById("exchangeBtn");
+const resultDiv = document.getElementById("result");
+const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-// Визначаємо, чи мобільний пристрій
+// Функция для определения мобильного устройства
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Відкриваємо гаманець через deeplink
-function openDeeplink(walletType) {
-    if (walletType === "phantom") {
-        window.location.href = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}`;
-    } else if (walletType === "solflare") {
-        window.location.href = `https://solflare.com/app-connect`;
-    }
-}
-
-// Отримуємо підключений гаманець
+// Определяем доступные кошельки
 const getWallet = (walletType) => {
     if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
         return window.phantom.solana;
@@ -32,36 +29,11 @@ const getWallet = (walletType) => {
     return null;
 };
 
-// Підключення гаманця
-async function connectWallet(walletType) {
-    let wallet = getWallet(walletType);
-
-    // Якщо мобільний пристрій, відкриваємо гаманець через deeplink
-    if (isMobile()) {
-        openDeeplink(walletType);
-        return;
-    }
-
-    // Якщо браузер, підключаємо через API
-    if (!wallet) {
-        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
-        return;
-    }
-
-    try {
-        await wallet.connect();
-        walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-    } catch (err) {
-        console.error("Помилка підключення:", err);
-    }
-}
-
-// Обробка кліку на кнопку підключення
+// Открытие и закрытие popup
 connectWalletBtn.addEventListener("click", () => {
     walletPopup.classList.add("show-popup");
 });
 
-// Закриття popup
 function closePopup() {
     walletPopup.classList.remove("show-popup");
 }
@@ -78,7 +50,7 @@ function connectWallet(walletType) {
 
     wallet.connect()
         .then(() => {
-            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+            walletStatus.textContent = Гаманець підключено: ${wallet.publicKey.toString()};
         })
         .catch(err => {
             console.error("Помилка підключення:", err);
@@ -149,9 +121,9 @@ async function exchangeTokens(wallet, amountInUSDT) {
         const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
 
         await connection.confirmTransaction(txid);
-        console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
+        console.log(Транзакція успішно надіслана! TXID: ${txid});
         resultDiv.style.display = "block";
-        resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
+        resultDiv.textContent = Обмін завершено! TXID: ${txid};
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
