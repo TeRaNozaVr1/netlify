@@ -74,10 +74,13 @@
             const { publicKey } = getUrlParams();
             if (publicKey) {
                 document.getElementById("walletAddress").innerText = `Адреса гаманця: ${publicKey}`;
+            } else {
+                console.log('Адреса гаманця не знайдена в URL.');
             }
         })();
     </script>
 </body>
 </html>
+
 
 
