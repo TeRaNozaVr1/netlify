@@ -1,4 +1,3 @@
-
 const { Connection, PublicKey, SystemProgram, Transaction, Keypair } = solanaWeb3;
 
 // Підключення до Solana мережі (mainnet-beta)
@@ -44,33 +43,39 @@ exchangeBtn.addEventListener('click', async () => {
 // Функція для обміну токенів
 async function exchangeTokens(wallet, amountInUSDT) {
     try {
-        // Токен для обміну
-        const usdtMintAddress = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU"); // Замінити на адресу USDT
-        const splTokenAddress = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo"); // Замінити на адресу SPL токена
+        // Адреси гаманців
+        const recipientAddress = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU"); // Гаманець отримувача USDT/USDC
+        const senderAddress = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo"); // Гаманець з токенами
 
-        // Створення транзакції для обміну
-        const transaction = new Transaction();
-        const sender = wallet.publicKey;
+        // Розрахунок кількості токенів для обміну
+        const tokenPrice = 0.00048; // Вартість одного токена в USDT/USDC
+        const tokenAmount = Math.floor(amountInUSDT / tokenPrice); // Кількість токенів для відправлення
 
-        // Приклад: надсилання USDT на іншу адресу (реалізація залежить від конкретного сценарію обміну)
-        const transferInstruction = SystemProgram.transfer({
-            fromPubkey: sender,
-            toPubkey: splTokenAddress,
-            lamports: amountInUSDT * 1000000000 // Перетворення USDT на лампорти (як приклад)
-        });
+        // Перевірка балансу
+        const senderBalance = await connection.getBalance(senderAddress);
+        if (senderBalance < tokenAmount) {
+            alert("Недостатньо токенів для обміну.");
+            return;
+        }
 
-        transaction.add(transferInstruction);
+        // Створення транзакції для переказу токенів
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: senderAddress,
+                toPubkey: recipientAddress,
+                lamports: tokenAmount
+            })
+        );
 
-        // Підтвердження транзакції
-        const signature = await wallet.signTransaction(transaction);
-
-        // Надсилання транзакції
-        const txid = await connection.sendRawTransaction(signature.serialize());
+        // Підписання та надсилання транзакції
+        transaction.feePayer = wallet.publicKey;
+        const signedTransaction = await wallet.signTransaction(transaction);
+        const txid = await connection.sendRawTransaction(signedTransaction.serialize());
         await connection.confirmTransaction(txid);
 
         console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
 
-        // Показуємо результат
+        // Відображення результату
         resultDiv.style.display = 'block';
         resultDiv.textContent = `Обмін успішно завершено! TXID: ${txid}`;
     } catch (err) {
@@ -79,3 +84,4 @@ async function exchangeTokens(wallet, amountInUSDT) {
         resultDiv.textContent = 'Помилка при обміні токенів. Спробуйте ще раз.';
     }
 }
+
