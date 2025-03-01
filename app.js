@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     async function checkWalletConnection() {
         try {
-            const response = await fetch("https://your-backend.com/api/get-wallet", {
+            const response = await fetch("https://cool-kataifi-90a5d5.netlify.app", {
                 method: "GET",
                 credentials: "include",
             });
@@ -22,20 +22,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Автоматична перевірка підключення
-    checkWalletConnection();
-    setInterval(checkWalletConnection, 5000); // Оновлення статусу кожні 5 секунд
 
-    // Відкриваємо мобільний додаток Phantom
+    // Якщо відкриття йде з мобільного, використовуємо deeplink для підключення
     if (/Android|iPhone/i.test(navigator.userAgent)) {
-        // ✅ Правильний deeplink, що гарантує запит дозволу!
-        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app/wallet-callback")}`;
         window.location.href = deeplink;
     } else {
         alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
         window.open("https://phantom.app/", "_blank");
     }
 });
+
 
 
 
