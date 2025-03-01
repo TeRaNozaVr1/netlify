@@ -33,28 +33,33 @@ const getWallet = (walletType) => {
 };
 
 // Подключение кошелька
-connectWalletBtn.addEventListener("click", async () => {
-    const selectedWallet = walletSelect.value;
-    let wallet = getWallet(selectedWallet);
+document.getElementById("connectWalletBtn").addEventListener("click", openPopup);
 
+function openPopup() {
+    document.getElementById("walletPopup").classList.add("show-popup");
+}
+
+function closePopup() {
+    document.getElementById("walletPopup").classList.remove("show-popup");
+}
+
+function connectWallet(walletType) {
+    closePopup(); // Закриваємо popup після вибору гаманця
+    let wallet = getWallet(walletType);
+    
     if (!wallet) {
-        if (isMobile()) {
-            // Открываем приложение кошелька
-            const walletUrl = selectedWallet === "phantom" ? "https://phantom.app/ul/browse" : "https://solflare.com/";
-            window.open(walletUrl, "_blank");
-            return;
-        } else {
-            alert("Будь ласка, встановіть Phantom Wallet або Solflare");
-            return;
-        }
+        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
+        return;
     }
 
-    try {
-        await wallet.connect();
-        walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-    } catch (err) {
-        console.log("Помилка підключення:", err);
-    }
+    wallet.connect()
+        .then(() => {
+            document.getElementById("walletStatus").textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+        })
+        .catch(err => {
+            console.log("Помилка підключення:", err);
+        });
+}
 });
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
