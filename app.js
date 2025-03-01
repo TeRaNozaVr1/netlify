@@ -21,12 +21,40 @@ function isMobile() {
 }
 
 // Підключення гаманця через диплінк
-function connectWallet() {
+function connectWallet(walletType) {
+    closePopup();
+
     if (isMobile()) {
-        window.location.href = "phantom://connect?redirect_link=" + encodeURIComponent(window.location.href);
-    } else {
-        alert("Будь ласка, використовуйте мобільний пристрій для підключення через Phantom");
+        const dappUrl = encodeURIComponent(window.location.origin); // URL сайту для повернення
+        let deepLink = "";
+
+        if (walletType === "phantom") {
+            deepLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${dappUrl}`;
+        } else if (walletType === "solflare") {
+            deepLink = `https://solflare.com/connect-wallet?ref=${dappUrl}`;
+        }
+
+        if (deepLink) {
+            window.location.href = deepLink;
+        } else {
+            alert("Wallet type not supported.");
+        }
+        return;
     }
+
+    let wallet = getWallet(walletType);
+    if (!wallet) {
+        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
+        return;
+    }
+
+    wallet.connect()
+        .then(() => {
+            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+        })
+        .catch(err => {
+            console.error("Помилка підключення:", err);
+        });
 }
 
 // Підпис повідомлення через диплінк
