@@ -5,7 +5,8 @@ document.addEventListener("DOMContentLoaded", function () {
     async function connectWallet() {
         if (window.solana && window.solana.isPhantom) {
             try {
-                const response = await window.solana.connect();
+                // Запит на підключення гаманця
+                const response = await window.solana.connect({ onlyIfTrusted: false });
                 walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
                 connectWalletBtn.textContent = "Wallet Connected";
                 connectWalletBtn.disabled = true;
@@ -14,9 +15,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 walletStatus.textContent = "Connection failed!";
             }
         } else {
-            // Якщо Phantom не знайдено, використовуємо мобільний deeplink
+            // Використовуємо deeplink для мобільних пристроїв
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                window.location.href = "https://phantom.app/ul/v1/connect?app_url=https://cool-kataifi-90a5d5.netlify.app";
+                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodeURIComponent(window.location.href)}`;
+                window.location.href = deeplink;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
                 window.open("https://phantom.app/", "_blank");
@@ -26,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     connectWalletBtn.addEventListener("click", connectWallet);
 });
+
 
 
 
