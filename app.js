@@ -5,33 +5,26 @@ document.addEventListener("DOMContentLoaded", async function () {
     async function connectWallet(autoConnect = false) {
         if (window.solana && window.solana.isPhantom) {
             try {
-                // Автопідключення, якщо користувач уже підтвердив гаманець
+                // Викликаємо підключення
                 const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
 
-                // Зберігаємо підключений гаманець у localStorage
+                // Зберігаємо адресу гаманця в localStorage
                 localStorage.setItem("phantomWallet", response.publicKey.toString());
 
-                // Відображаємо підключений гаманець
+                // Оновлюємо UI
                 walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
                 connectWalletBtn.textContent = "Wallet Connected";
                 connectWalletBtn.disabled = true;
 
-                // Отримуємо баланс
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"));
-                const balance = await connection.getBalance(response.publicKey);
-                console.log(`Balance: ${balance / solanaWeb3.LAMPORTS_PER_SOL} SOL`);
-
-                // Отримуємо історію транзакцій
-                const transactions = await connection.getConfirmedSignaturesForAddress2(response.publicKey);
-                console.log("Recent transactions:", transactions);
-
+                console.log("Wallet connected:", response.publicKey.toString());
             } catch (err) {
                 console.error("Connection failed:", err);
                 walletStatus.textContent = "Connection failed!";
-                localStorage.removeItem("phantomWallet"); // Видаляємо збережений гаманець, якщо є помилка
+                localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
             }
         } else {
-            // Перевіряємо, чи це мобільний пристрій
+            console.log("Phantom not found. Redirecting to install...");
+            // Якщо користувач на мобільному, відкриваємо додаток через deeplink
             if (/Android|iPhone/i.test(navigator.userAgent)) {
                 const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
                 window.location.href = deeplink;
@@ -55,9 +48,3 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Виконуємо автоматичне підключення при завантаженні сторінки
     checkAutoConnect();
 });
-
-
-
-
-
-
