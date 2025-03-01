@@ -11,6 +11,7 @@ const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Kh
 
 // UI Елементи
 const connectWalletBtn = document.getElementById("connectWalletBtn");
+connectWalletBtn.addEventListener("click", () => connectWallet("phantom"));
 const walletStatus = document.getElementById("walletStatus");
 const exchangeBtn = document.getElementById("exchangeBtn");
 const resultDiv = document.getElementById("result");
