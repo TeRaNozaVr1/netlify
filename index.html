@@ -45,20 +45,21 @@
         button:hover {
             background: #85e732;
         }
-        .input-group {
-            margin: 10px 0;
-        }
-        input, select {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
+        .popup {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.3);
             text-align: center;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
         }
-        label {
-            color: white;
-            font-size: 14px;
+        .popup button {
+            margin-top: 10px;
         }
         #walletStatus {
             color: white;
@@ -86,6 +87,48 @@
         
         <button id="exchangeBtn">Обміняти</button>
     </div>
+    
+    <div class="popup" id="walletPopup">
+        <h3>Виберіть гаманець</h3>
+        <button id="phantomWallet">Phantom</button>
+        <button id="solflareWallet">Solflare</button>
+    </div>
+    
+    <script>
+        document.getElementById("connectWalletBtn").addEventListener("click", function() {
+            document.getElementById("walletPopup").style.display = "block";
+        });
+        
+        document.getElementById("phantomWallet").addEventListener("click", async function() {
+            const wallet = window.phantom?.solana;
+            if (wallet?.isPhantom) {
+                try {
+                    await wallet.connect();
+                    document.getElementById("walletStatus").textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+                } catch (err) {
+                    console.error("Помилка підключення:", err);
+                }
+            } else {
+                alert("Будь ласка, встановіть Phantom Wallet");
+            }
+            document.getElementById("walletPopup").style.display = "none";
+        });
+        
+        document.getElementById("solflareWallet").addEventListener("click", async function() {
+            const wallet = window.solflare;
+            if (wallet?.isSolflare) {
+                try {
+                    await wallet.connect();
+                    document.getElementById("walletStatus").textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+                } catch (err) {
+                    console.error("Помилка підключення:", err);
+                }
+            } else {
+                alert("Будь ласка, встановіть Solflare Wallet");
+            }
+            document.getElementById("walletPopup").style.display = "none";
+        });
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
