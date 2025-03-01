@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Підключення до Phantom Wallet</title>
-    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,31 +21,36 @@
     <div id="wallet-address"></div>
 
     <script>
-        const connectButton = document.getElementById('connect-button');
-        const walletAddressDiv = document.getElementById('wallet-address');
+        const connectButton = document.getElementById("connect-button");
+        const walletAddressDiv = document.getElementById("wallet-address");
 
-        // Ініціалізація WalletConnect
-        const provider = new WalletConnectProvider.default({
-            rpc: {
-                1: "https://api.mainnet-beta.solana.com", // RPC URL для Solana
-            },
-        });
+        connectButton.addEventListener("click", async () => {
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    // Запит на підключення до Phantom Wallet
+                    const response = await window.solana.connect();
+                    const walletAddress = response.publicKey.toString();
 
-        connectButton.addEventListener('click', async () => {
-            if (!provider.connected) {
-                // Підключення до гаманця
-                await provider.enable();
+                    // Відображаємо адресу гаманця на сторінці
+                    walletAddressDiv.innerText = `Підключено: ${walletAddress}`;
+
+                    // Відправляємо адресу на сервер (замініть на свій бекенд)
+                    await fetch("https://your-backend.com/api/save-wallet", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ walletAddress }),
+                    });
+
+                } catch (err) {
+                    console.error("❌ Помилка підключення:", err);
+                }
+            } else {
+                alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
+                window.open("https://phantom.app/", "_blank");
             }
-
-            // Отримання адреси гаманця
-            const accounts = await provider.request({ method: 'eth_accounts' });
-            const walletAddress = accounts[0];
-
-            // Виведення адреси на сайт
-            walletAddressDiv.innerText = `Підключено: ${walletAddress}`;
-
         });
     </script>
 </body>
 </html>
+
 
