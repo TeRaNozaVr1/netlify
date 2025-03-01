@@ -22,64 +22,44 @@ function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Получение доступного кошелька
-const getWallet = () => {
-    if (window.solana?.isPhantom) {
-        return window.solana;
-    } else if (window.solflare?.isSolflare) {
-        return window.solflare;
-    }
-    return null;
-};
-
-// Открытие popup
-connectWalletBtn.addEventListener("click", () => {
-    if (isMobile()) {
-        connectMobileWallet();
-    } else {
-        walletPopup.classList.add("show-popup");
-    }
-});
-
-// Закрытие popup
-function closePopup() {
-    walletPopup.classList.remove("show-popup");
+// Проверка наличия Phantom Wallet
+function getPhantomWallet() {
+    return window.phantom?.solana?.isPhantom ? window.phantom.solana : null;
 }
 
-// Подключение кошелька для десктопа
-function connectWallet(walletType) {
-    closePopup();
-    let wallet = getWallet();
-
+// Подключение Phantom Wallet (ПК)
+async function connectPhantom() {
+    const wallet = getPhantomWallet();
+    
     if (!wallet) {
-        alert(`Будь ласка, встановіть ${walletType === "phantom" ? "Phantom Wallet" : "Solflare"}`);
+        alert("Будь ласка, встановіть Phantom Wallet.");
         return;
     }
 
-    wallet.connect()
-        .then(() => {
-            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-        })
-        .catch(err => {
-            console.error("Помилка підключення:", err);
-        });
-}
-
-// Подключение мобильного кошелька через deep link
-function connectMobileWallet() {
-    if (window.solana?.isPhantom) {
-        window.solana.connect()
-            .then(() => {
-                walletStatus.textContent = `Гаманець підключено: ${window.solana.publicKey.toString()}`;
-            })
-            .catch(err => {
-                console.error("Помилка підключення:", err);
-            });
-    } else {
-        const link = "https://phantom.app/ul/v1/connect?app_url=https://yourwebsite.com";
-        window.location.href = link;
+    try {
+        await wallet.connect();
+        walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+    } catch (err) {
+        console.error("Помилка підключення:", err);
     }
 }
+
+// Подключение Phantom Wallet (мобильное устройство)
+async function connectPhantomMobile() {
+    const phantomDeepLink = "https://phantom.app/ul/v1/connect?app_url=https://yourwebsite.com";
+
+    // Открываем deep link на мобильных устройствах
+    window.location.href = phantomDeepLink;
+}
+
+// Клик по кнопке "Подключить кошелек"
+connectWalletBtn.addEventListener("click", async () => {
+    if (isMobile()) {
+        connectPhantomMobile();
+    } else {
+        await connectPhantom();
+    }
+});
 
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
