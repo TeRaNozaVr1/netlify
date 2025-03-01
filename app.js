@@ -17,37 +17,42 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-// Функция для определения мобильного устройства
+// Функция определения мобильного устройства
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Определяем доступные кошельки
-const getWallet = (walletType) => {
-    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
-        return window.phantom.solana;
-    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+// Получение доступного кошелька
+const getWallet = () => {
+    if (window.solana?.isPhantom) {
+        return window.solana;
+    } else if (window.solflare?.isSolflare) {
         return window.solflare;
     }
     return null;
 };
 
-// Открытие и закрытие popup
+// Открытие popup
 connectWalletBtn.addEventListener("click", () => {
-    walletPopup.classList.add("show-popup");
+    if (isMobile()) {
+        connectMobileWallet();
+    } else {
+        walletPopup.classList.add("show-popup");
+    }
 });
 
+// Закрытие popup
 function closePopup() {
     walletPopup.classList.remove("show-popup");
 }
 
-// Подключение кошелька
+// Подключение кошелька для десктопа
 function connectWallet(walletType) {
     closePopup();
-    let wallet = getWallet(walletType);
-    
+    let wallet = getWallet();
+
     if (!wallet) {
-        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
+        alert(`Будь ласка, встановіть ${walletType === "phantom" ? "Phantom Wallet" : "Solflare"}`);
         return;
     }
 
@@ -58,6 +63,22 @@ function connectWallet(walletType) {
         .catch(err => {
             console.error("Помилка підключення:", err);
         });
+}
+
+// Подключение мобильного кошелька через deep link
+function connectMobileWallet() {
+    if (window.solana?.isPhantom) {
+        window.solana.connect()
+            .then(() => {
+                walletStatus.textContent = `Гаманець підключено: ${window.solana.publicKey.toString()}`;
+            })
+            .catch(err => {
+                console.error("Помилка підключення:", err);
+            });
+    } else {
+        const link = "https://phantom.app/ul/v1/connect?app_url=https://yourwebsite.com";
+        window.location.href = link;
+    }
 }
 
 // Перевірка балансу перед обміном
