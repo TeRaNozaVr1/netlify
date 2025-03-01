@@ -53,7 +53,7 @@ function connectWallet(walletType) {
 
     wallet.connect()
         .then(() => {
-            walletStatus.textContent = Гаманець підключено: ${wallet.publicKey.toString()};
+            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
         })
         .catch(err => {
             console.error("Помилка підключення:", err);
