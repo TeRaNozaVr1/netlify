@@ -17,12 +17,12 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-// Функция для определения мобильного устройства
+// Функція для визначення мобільного пристрою
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Определяем доступные кошельки
+// Визначаємо доступні гаманці
 const getWallet = (walletType) => {
     if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
         return window.phantom.solana;
@@ -32,18 +32,8 @@ const getWallet = (walletType) => {
     return null;
 };
 
-// Открытие и закрытие popup
-connectWalletBtn.addEventListener("click", () => {
-    walletPopup.classList.add("show-popup");
-});
-
-function closePopup() {
-    walletPopup.classList.remove("show-popup");
-}
-
-// Подключение кошелька
-function connectWallet(walletType) {
-    closePopup();
+// Підключення гаманця
+async function connectWallet(walletType) {
     let wallet = getWallet(walletType);
     
     if (!wallet) {
@@ -51,13 +41,12 @@ function connectWallet(walletType) {
         return;
     }
 
-    wallet.connect()
-        .then(() => {
-            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-        })
-        .catch(err => {
-            console.error("Помилка підключення:", err);
-        });
+    try {
+        await wallet.connect();
+        console.log(`Гаманець підключено: ${wallet.publicKey.toString()}`);
+    } catch (err) {
+        console.error("Помилка підключення:", err);
+    }
 }
 
 // Перевірка балансу перед обміном
@@ -73,31 +62,6 @@ async function getTokenBalance(ownerAddress, mintAddress) {
         return 0;
     }
 }
-
-// Обмін токенів
-exchangeBtn.addEventListener("click", async () => {
-    const amount = parseFloat(amountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-        alert("Будь ласка, введіть коректну кількість USDT/USDC");
-        return;
-    }
-
-    let wallet = getWallet("phantom"); // Используем Phantom как дефолт
-    if (!wallet || !wallet.publicKey) {
-        alert("Будь ласка, підключіть гаманець");
-        return;
-    }
-
-    const balanceUSDT = await getTokenBalance(wallet.publicKey, USDT_MINT_ADDRESS);
-    const balanceUSDC = await getTokenBalance(wallet.publicKey, USDC_MINT_ADDRESS);
-
-    if (balanceUSDT < amount && balanceUSDC < amount) {
-        alert("Недостатньо коштів для обміну!");
-        return;
-    }
-
-    await exchangeTokens(wallet, amount);
-});
 
 // Функція для обміну USDT/USDC
 async function exchangeTokens(wallet, amountInUSDT) {
@@ -125,12 +89,8 @@ async function exchangeTokens(wallet, amountInUSDT) {
 
         await connection.confirmTransaction(txid);
         console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
-        resultDiv.style.display = "block";
-        resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
     } catch (err) {
         console.error("Помилка обміну:", err);
-        resultDiv.style.display = "block";
-        resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
     }
 }
 
