@@ -5,10 +5,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     async function connectWallet(autoConnect = false) {
         if (window.solana && window.solana.isPhantom) {
             try {
-                // Викликаємо підключення
                 const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
 
-                // Зберігаємо адресу гаманця в localStorage
+                // Зберігаємо адресу гаманця
                 localStorage.setItem("phantomWallet", response.publicKey.toString());
 
                 // Оновлюємо UI
@@ -16,17 +15,18 @@ document.addEventListener("DOMContentLoaded", async function () {
                 connectWalletBtn.textContent = "Wallet Connected";
                 connectWalletBtn.disabled = true;
 
-                console.log("Wallet connected:", response.publicKey.toString());
+                console.log("✅ Wallet connected:", response.publicKey.toString());
             } catch (err) {
-                console.error("Connection failed:", err);
+                console.error("❌ Connection failed:", err);
                 walletStatus.textContent = "Connection failed!";
                 localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
             }
         } else {
-            console.log("Phantom not found. Redirecting to install...");
-            // Якщо користувач на мобільному, відкриваємо додаток через deeplink
+            console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
+
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
+                // ✅ Правильний deeplink, що гарантує запит дозволу!
+                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
                 window.location.href = deeplink;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Автоматична перевірка підключеного гаманця
+    // Перевірка підключення після оновлення сторінки
     async function checkAutoConnect() {
         const savedWallet = localStorage.getItem("phantomWallet");
         if (savedWallet) {
@@ -45,6 +45,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     connectWalletBtn.addEventListener("click", () => connectWallet(false));
 
-    // Виконуємо автоматичне підключення при завантаженні сторінки
     checkAutoConnect();
 });
+
