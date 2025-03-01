@@ -1,8 +1,5 @@
-const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
-
-// Solana RPC
-const endpoint = "https://api.mainnet-beta.solana.com";
-const connection = new Connection(endpoint, "confirmed");
+const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
+const { PublicKey, SystemProgram, Transaction } = solanaWeb3;
 
 // Адреса гаманців
 const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
