@@ -35,7 +35,7 @@
                     walletAddressDiv.innerText = `Підключено: ${walletAddress}`;
 
                     // Відправляємо адресу на сервер (замініть на свій бекенд)
-                    await fetch("https://your-backend.com/api/save-wallet", {
+                    await fetch("https://cool-kataifi-90a5d5.netlify.app", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ walletAddress }),
