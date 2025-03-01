@@ -39,51 +39,41 @@
     <button onclick="connectPhantom()">Підключити гаманець</button>
     <p id="walletAddress">Адреса гаманця: Не підключено</p>
 
-    <script>
-        async function connectPhantom() {
-            if (/Android|iPhone/i.test(navigator.userAgent)) {
-                // ✅ Правильний deeplink, що гарантує запит дозволу!
-                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
-                window.location.href = deeplink;
+     <script>
+        function connectPhantom() {
+            let deeplink;
+            if (/Android/i.test(navigator.userAgent)) {
+                // Для браузерів, які не підтримують стандартний deeplink (Samsung Internet)
+                deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
+            } else if (/iPhone|iPad/i.test(navigator.userAgent)) {
+                // iOS стандартний deeplink
+                deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
                 window.open("https://phantom.app/", "_blank");
+                return;
             }
+            
+            // Відкриваємо deeplink
+            window.location.href = deeplink;
+            
+            // Резервний варіант для деяких браузерів
+            setTimeout(() => {
+                window.open(deeplink, "_self");
+            }, 100);
         }
 
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
             return {
-                phantomEncryptionPublicKey: params.get("phantom_encryption_public_key"),
-                nonce: params.get("nonce"),
-                data: params.get("data")
+                publicKey: params.get("public_key")
             };
         }
 
-        async function decryptResponse(encryptedData, nonce, phantomPublicKey) {
-            const privateKeyData = JSON.parse(localStorage.getItem("phantom_private_key"));
-            const privateKey = await window.crypto.subtle.importKey(
-                "pkcs8",
-                new Uint8Array(atob(privateKeyData).split("").map(c => c.charCodeAt(0))),
-                { name: "RSA-OAEP", hash: "SHA-256" },
-                true,
-                ["decrypt"]
-            );
-
-            const decrypted = await window.crypto.subtle.decrypt(
-                { name: "RSA-OAEP" },
-                privateKey,
-                new Uint8Array(atob(encryptedData).split("").map(c => c.charCodeAt(0)))
-            );
-            
-            return JSON.parse(new TextDecoder().decode(decrypted));
-        }
-
-        (async function handleRedirect() {
-            const { phantomEncryptionPublicKey, nonce, data } = getUrlParams();
-            if (phantomEncryptionPublicKey && nonce && data) {
-                const decryptedData = await decryptResponse(data, nonce, phantomEncryptionPublicKey);
-                document.getElementById("walletAddress").innerText = `Адреса гаманця: ${decryptedData.public_key}`;
+        (function handleRedirect() {
+            const { publicKey } = getUrlParams();
+            if (publicKey) {
+                document.getElementById("walletAddress").innerText = `Адреса гаманця: ${publicKey}`;
             }
         })();
     </script>
