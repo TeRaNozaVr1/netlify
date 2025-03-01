@@ -124,7 +124,7 @@ async function exchangeTokens(wallet, amountInUSDT) {
         const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
 
         await connection.confirmTransaction(txid);
-        console.log(Транзакція успішно надіслана! TXID: ${txid});
+        console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
         resultDiv.style.display = "block";
         resultDiv.textContent = Обмін завершено! TXID: ${txid};
     } catch (err) {
