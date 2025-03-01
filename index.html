@@ -36,49 +36,59 @@
 </head>
 <body>
     <h1>Підключення до Phantom Wallet</h1>
-    <button onclick="connectPhantom()">Підключити гаманець</button>
-    <p id="walletAddress">Адреса гаманця: Не підключено</p>
+    <button id="connectWalletBtn">Підключити гаманець</button>
+    <p id="walletStatus">Адреса гаманця: Не підключено</p>
 
     <script>
-        function connectPhantom() {
-            let deeplink;
-            if (/Android/i.test(navigator.userAgent)) {
-                // Для Android
-                deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
-            } else if (/iPhone|iPad/i.test(navigator.userAgent)) {
-                // Для iOS
-                deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
-            } else {
-                alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
-                window.open("https://phantom.app/", "_blank");
-                return;
+        document.addEventListener("DOMContentLoaded", async function () {
+            const connectWalletBtn = document.getElementById("connectWalletBtn");
+            const walletStatus = document.getElementById("walletStatus");
+
+            async function connectWallet(autoConnect = false) {
+                if (window.solana && window.solana.isPhantom) {
+                    try {
+                        const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
+
+                        // Зберігаємо адресу гаманця
+                        localStorage.setItem("phantomWallet", response.publicKey.toString());
+
+                        // Оновлюємо UI
+                        walletStatus.textContent = `Підключено: ${response.publicKey.toString()}`;
+                        connectWalletBtn.textContent = "Гаманець підключено";
+                        connectWalletBtn.disabled = true;
+
+                        console.log("✅ Гаманець підключено:", response.publicKey.toString());
+                    } catch (err) {
+                        console.error("❌ Помилка підключення:", err);
+                        walletStatus.textContent = "Помилка підключення!";
+                        localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
+                    }
+                } else {
+                    console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
+
+                    if (/Android|iPhone/i.test(navigator.userAgent)) {
+                        // ✅ Правильний deeplink, що гарантує запит дозволу!
+                        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+                        window.location.href = deeplink;
+                    } else {
+                        alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
+                        window.open("https://phantom.app/", "_blank");
+                    }
+                }
             }
 
-            // Відкриваємо deeplink
-            window.location.href = deeplink;
-
-            // Резервний варіант для деяких браузерів
-            setTimeout(() => {
-                window.open(deeplink, "_self");
-            }, 100);
-        }
-
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                publicKey: params.get("public_key")
-            };
-        }
-
-        (function handleRedirect() {
-            const { publicKey } = getUrlParams();
-            if (publicKey) {
-                document.getElementById("walletAddress").innerText = `Адреса гаманця: ${publicKey}`;
-                console.log(`Адреса гаманця отримана: ${publicKey}`);
-            } else {
-                console.log('Адреса гаманця не знайдена в URL.');
+            // Перевірка підключення після оновлення сторінки
+            async function checkAutoConnect() {
+                const savedWallet = localStorage.getItem("phantomWallet");
+                if (savedWallet) {
+                    await connectWallet(true);  // Автопідключення, якщо гаманець вже збережений
+                }
             }
-        })();
+
+            connectWalletBtn.addEventListener("click", () => connectWallet(false));
+
+            checkAutoConnect();
+        });
     </script>
 </body>
 </html>
