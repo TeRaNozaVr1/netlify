@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Callback</title>
+</head>
+<body>
+    <p>З'єднання з гаманцем...</p>
+
+    <script>
+        async function handleWalletCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const walletAddress = urlParams.get("public_key"); // Отримуємо адресу
+
+            if (walletAddress) {
+                console.log("✅ Отримано гаманець:", walletAddress);
+
+                // Відправляємо адресу гаманця на сервер
+                try {
+                    const response = await fetch("https://your-backend.com/api/save-wallet", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ walletAddress }),
+                        credentials: "include"
+                    });
+
+                    if (response.ok) {
+                        console.log("✅ Гаманець збережено на сервері");
+                    } else {
+                        console.error("❌ Помилка збереження гаманця");
+                    }
+                } catch (err) {
+                    console.error("❌ Помилка з'єднання з сервером:", err);
+                }
+
+                // Повертаємо користувача на головну
+                window.location.href = "https://cool-kataifi-90a5d5.netlify.app";
+            } else {
+                console.error("❌ Адреса гаманця не отримана");
+                document.body.innerHTML = "<p>Помилка: немає адреси гаманця!</p>";
+            }
+        }
+
+        handleWalletCallback();
+    </script>
+</body>
+</html>
