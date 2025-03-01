@@ -1,66 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Wallet Connect</title>
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <title>Підключення до Phantom Wallet</title>
+    <script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #143021;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            padding: 20px;
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-        .widget {
-            background: #1e2a1f;
-            padding: 20px;
-            border-radius: 20px;
-            text-align: center;
-            width: 100%;
-            max-width: 350px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        h1 {
-            color: white;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            background: #98ff38;
-            color: black;
-            font-size: 16px;
+        #wallet-address {
+            margin-top: 20px;
             font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background: #85e732;
-        }
-        #walletStatus {
-            color: white;
-            font-size: 14px;
-            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="widget">
-        <h1>Solana Wallet</h1>
-        <button id="connectWalletBtn">Connect Wallet</button>
-        <p id="walletStatus">Wallet not connected</p>
-    </div>
+    <h1>Підключення до Phantom Wallet</h1>
+    <button id="connect-button">Підключити Phantom Wallet</button>
+    <div id="wallet-address"></div>
 
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <script src="app.js"></script>
+    <script>
+        const connectButton = document.getElementById('connect-button');
+        const walletAddressDiv = document.getElementById('wallet-address');
+
+        // Ініціалізація WalletConnect
+        const provider = new WalletConnectProvider.default({
+            rpc: {
+                1: "https://api.mainnet-beta.solana.com", // RPC URL для Solana
+            },
+        });
+
+        connectButton.addEventListener('click', async () => {
+            if (!provider.connected) {
+                // Підключення до гаманця
+                await provider.enable();
+            }
+
+            // Отримання адреси гаманця
+            const accounts = await provider.request({ method: 'eth_accounts' });
+            const walletAddress = accounts[0];
+
+            // Виведення адреси на сайт
+            walletAddressDiv.innerText = Підключено: ${walletAddress};
+        });
+    </script>
 </body>
 </html>
 
