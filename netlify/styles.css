@@ -1,0 +1,91 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.widget-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.wallet-status {
+    margin-bottom: 20px;
+}
+
+#walletStatus {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+button {
+    background-color: #ff7c7c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #ff4c4c;
+}
+
+.exchange-form {
+    margin-bottom: 20px;
+}
+
+.exchange-form input {
+    padding: 10px;
+    width: 80%;
+    font-size: 16px;
+    margin-top: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.exchange-form button {
+    width: 100%;
+    padding: 15px;
+    background-color: #4CAF50;
+    font-size: 18px;
+}
+
+.exchange-form button:hover {
+    background-color: #45a049;
+}
+
+.result {
+    display: none;
+    font-size: 16px;
+    color: green;
+}
+
+@media (max-width: 600px) {
+    .widget-container {
+        padding: 20px;
+    }
+
+    button {
+        width: 100%;
+    }
+}
