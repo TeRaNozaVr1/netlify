@@ -79,4 +79,3 @@ async function exchangeTokens(wallet, amountInUSDT) {
         resultDiv.textContent = 'Помилка при обміні токенів. Спробуйте ще раз.';
     }
 }
-window.Buffer = Buffer;
