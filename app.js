@@ -1,3 +1,4 @@
+const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
 const endpoint = "https://api.mainnet-beta.solana.com";
 const connection = new Connection(endpoint, "confirmed");
 
