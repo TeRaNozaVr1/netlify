@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 if (response.publicKey) {
                     const walletAddress = response.publicKey.toString();
 
-                    // ✅ Зберігаємо адресу у localStorage
+                    // ✅ Зберігаємо адресу гаманця
                     localStorage.setItem("phantomWallet", walletAddress);
 
                     // ✅ Оновлюємо UI
@@ -28,17 +28,22 @@ document.addEventListener("DOMContentLoaded", async function () {
                 localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
             }
         } else {
-            console.log("⚠️ Phantom не знайдено. Використовуємо deeplink...");
+            console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
 
             if (/Android|iPhone/i.test(navigator.userAgent)) {
                 // 📲 **Оновлений deeplink для відкриття у додатку Phantom**
                 const deeplink = `phantom://ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
-                window.location.href = deeplink;
+                
+                // ❗️ Використовуємо прихований iframe для кращого виклику додатку
+                let iframe = document.createElement("iframe");
+                iframe.style.display = "none";
+                iframe.src = deeplink;
+                document.body.appendChild(iframe);
 
-                // ⏳ Чекаємо 2 секунди, якщо не відкрився додаток → відкриваємо браузерну версію
+                // 🕒 Видаляємо iframe через 3 секунди
                 setTimeout(() => {
-                    window.location.href = "https://phantom.app/";
-                }, 2000);
+                    document.body.removeChild(iframe);
+                }, 3000);
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
                 window.open("https://phantom.app/", "_blank");
@@ -46,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ✅ Перевіряємо збережений гаманець після редіректу
+    // ✅ Автоматичне підключення після редіректу
     async function checkWalletAfterRedirect() {
         const savedWallet = localStorage.getItem("phantomWallet");
         if (savedWallet) {
@@ -61,6 +66,5 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     checkWalletAfterRedirect();
 });
-
 
 
