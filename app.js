@@ -15,10 +15,6 @@ const walletStatus = document.getElementById("walletStatus");
 const signMessageBtn = document.getElementById("signMessageBtn");
 const sendTransactionBtn = document.getElementById("sendTransactionBtn");
 
-// Функция для определения мобильного устройства
-function isMobile() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
 
 // Підключення гаманця через диплінк
 function connectWallet(walletType) {
