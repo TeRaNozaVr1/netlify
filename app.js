@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     async function checkWalletConnection() {
         try {
-            const response = await fetch("https://your-backend.com/api/get-wallet", {
+            const response = await fetch("https://cool-kataifi-90a5d5.netlify.app", {
                 method: "GET",
                 credentials: "include",
             });
