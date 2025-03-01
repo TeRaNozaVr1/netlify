@@ -39,30 +39,54 @@
     <button onclick="connectPhantom()">Підключити гаманець</button>
     <p id="walletAddress">Адреса гаманця: Не підключено</p>
 
-     <script>
-        function connectPhantom() {
-            let deeplink;
-            if (/Android/i.test(navigator.userAgent)) {
-                // Для Android
-                deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
-            } else if (/iPhone|iPad/i.test(navigator.userAgent)) {
-                // Для iOS
-                deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+    <script>
+        // Отримання адреси гаманця через Web3 API
+        async function getWalletAddress() {
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    const response = await window.solana.connect();
+                    const publicKey = response.publicKey.toString();
+                    document.getElementById("walletAddress").innerText = `Адреса гаманця: ${publicKey}`;
+                    console.log(`Адреса гаманця: ${publicKey}`);
+                    return publicKey;
+                } catch (err) {
+                    console.error('Помилка підключення: ', err);
+                    alert('Помилка підключення до Phantom Wallet.');
+                }
             } else {
-                alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
-                window.open("https://phantom.app/", "_blank");
-                return;
+                alert("Phantom Wallet не встановлено.");
             }
-            
-            // Відкриваємо deeplink
-            window.location.href = deeplink;
-            
-            // Резервний варіант для деяких браузерів
-            setTimeout(() => {
-                window.open(deeplink, "_self");
-            }, 100);
         }
 
+        // Підключення через deeplink для підтвердження
+        function connectPhantom() {
+            let deeplink;
+            const walletAddress = document.getElementById("walletAddress").innerText;
+            if (!walletAddress.includes("Не підключено")) {
+                // Якщо адреса вже отримана, підтвердимо через deeplink
+                if (/Android/i.test(navigator.userAgent)) {
+                    deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&public_key=${walletAddress}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
+                } else if (/iPhone|iPad/i.test(navigator.userAgent)) {
+                    deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&public_key=${walletAddress}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+                } else {
+                    alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
+                    window.open("https://phantom.app/", "_blank");
+                    return;
+                }
+
+                // Відкриваємо deeplink
+                window.location.href = deeplink;
+
+                // Резервний варіант для деяких браузерів
+                setTimeout(() => {
+                    window.open(deeplink, "_self");
+                }, 100);
+            } else {
+                alert("Спочатку потрібно отримати адресу гаманця.");
+            }
+        }
+
+        // Функція для обробки редиректу та отримання параметрів
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
             return {
@@ -82,6 +106,7 @@
     </script>
 </body>
 </html>
+
 
 
 
