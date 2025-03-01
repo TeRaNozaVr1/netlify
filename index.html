@@ -40,33 +40,15 @@
     <p id="walletAddress">Адреса гаманця: Не підключено</p>
 
     <script>
-        async function generateKeyPair() {
-            const keyPair = await window.crypto.subtle.generateKey(
-                {
-                    name: "RSA-OAEP",
-                    modulusLength: 2048,
-                    publicExponent: new Uint8Array([1, 0, 1]),
-                    hash: "SHA-256"
-                },
-                true,
-                ["encrypt", "decrypt"]
-            );
-            
-            const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
-            const privateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-            
-            return {
-                dappEncryptionPublicKey: btoa(String.fromCharCode(...new Uint8Array(publicKey))),
-                dappEncryptionPrivateKey: privateKey
-            };
-        }
-
         async function connectPhantom() {
-            const { dappEncryptionPublicKey, dappEncryptionPrivateKey } = await generateKeyPair();
-            localStorage.setItem("phantom_private_key", JSON.stringify(dappEncryptionPrivateKey));
-            
-            const deeplink = `phantom://ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&dapp_encryption_public_key=${dappEncryptionPublicKey}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
-            window.location.href = deeplink;
+            if (/Android|iPhone/i.test(navigator.userAgent)) {
+                // ✅ Правильний deeplink, що гарантує запит дозволу!
+                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+                window.location.href = deeplink;
+            } else {
+                alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
+                window.open("https://phantom.app/", "_blank");
+            }
         }
 
         function getUrlParams() {
