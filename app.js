@@ -165,7 +165,3 @@ async function getTransactionHistory(publicKey) {
         console.error("Помилка отримання історії:", error);
     }
 }
-
-// Використання
-const connectWalletBtn = document.getElementById("connectWalletBtn");
-connectWalletBtn.addEventListener("click", () => connectWallet("phantom"));
