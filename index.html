@@ -43,10 +43,10 @@
         function connectPhantom() {
             let deeplink;
             if (/Android/i.test(navigator.userAgent)) {
-                // Для браузерів, які не підтримують стандартний deeplink (Samsung Internet)
+                // Для Android
                 deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
             } else if (/iPhone|iPad/i.test(navigator.userAgent)) {
-                // iOS стандартний deeplink
+                // Для iOS
                 deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
@@ -74,6 +74,7 @@
             const { publicKey } = getUrlParams();
             if (publicKey) {
                 document.getElementById("walletAddress").innerText = `Адреса гаманця: ${publicKey}`;
+                console.log(`Адреса гаманця отримана: ${publicKey}`);
             } else {
                 console.log('Адреса гаманця не знайдена в URL.');
             }
@@ -81,6 +82,7 @@
     </script>
 </body>
 </html>
+
 
 
 
