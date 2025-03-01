@@ -5,32 +5,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     async function connectWallet(autoConnect = false) {
         if (window.solana && window.solana.isPhantom) {
             try {
-                // 🔹 **Запитуємо дозвіл на доступ до гаманця**
                 const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
 
-                if (response.publicKey) {
-                    const walletAddress = response.publicKey.toString();
+                // Зберігаємо адресу гаманця
+                localStorage.setItem("phantomWallet", response.publicKey.toString());
 
-                    // 🔹 **Зберігаємо адресу гаманця**
-                    localStorage.setItem("phantomWallet", walletAddress);
+                // Оновлюємо UI
+                walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
+                connectWalletBtn.textContent = "Wallet Connected";
+                connectWalletBtn.disabled = true;
 
-                    // 🔹 **Запит на дозвіл переглядати баланс і транзакції**
-                    const permissions = await window.solana.request({
-                        method: "connect",
-                        params: { permissions: ["signAndSendTransaction", "viewBalance", "viewTransactions"] }
-                    });
-
-                    console.log("✅ Дозволи отримано:", permissions);
-
-                    // 🔹 **Оновлюємо UI**
-                    walletStatus.textContent = `Connected: ${walletAddress}`;
-                    connectWalletBtn.textContent = "Wallet Connected";
-                    connectWalletBtn.disabled = true;
-
-                    console.log("✅ Wallet connected:", walletAddress);
-                } else {
-                    console.error("⚠️ Не отримано publicKey після підключення.");
-                }
+                console.log("✅ Wallet connected:", response.publicKey.toString());
             } catch (err) {
                 console.error("❌ Connection failed:", err);
                 walletStatus.textContent = "Connection failed!";
@@ -40,19 +25,9 @@ document.addEventListener("DOMContentLoaded", async function () {
             console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
 
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                // 📲 **Оновлений deeplink для відкриття у додатку Phantom**
-                const deeplink = `phantom://ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
-                
-                // ❗️ Використовуємо прихований iframe для точного виклику
-                let iframe = document.createElement("iframe");
-                iframe.style.display = "none";
-                iframe.src = deeplink;
-                document.body.appendChild(iframe);
-
-                // 🕒 Видаляємо iframe через 3 секунди
-                setTimeout(() => {
-                    document.body.removeChild(iframe);
-                }, 3000);
+                // ✅ Правильний deeplink, що гарантує запит дозволу!
+                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+                window.location.href = deeplink;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
                 window.open("https://phantom.app/", "_blank");
@@ -60,21 +35,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ✅ Автоматичне підключення після редіректу
-    async function checkWalletAfterRedirect() {
+    // Перевірка підключення після оновлення сторінки
+    async function checkAutoConnect() {
         const savedWallet = localStorage.getItem("phantomWallet");
         if (savedWallet) {
-            walletStatus.textContent = `Connected: ${savedWallet}`;
-            connectWalletBtn.textContent = "Wallet Connected";
-            connectWalletBtn.disabled = true;
-            console.log("🔄 Wallet auto-connected:", savedWallet);
+            await connectWallet(true);
         }
     }
 
     connectWalletBtn.addEventListener("click", () => connectWallet(false));
 
-    checkWalletAfterRedirect();
+    checkAutoConnect();
 });
+
 
 
 
