@@ -17,7 +17,7 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-// Определяем, мобильное устройство или нет
+// Проверяем, мобильное устройство или нет
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
@@ -27,7 +27,7 @@ function getPhantomWallet() {
     return window.phantom?.solana?.isPhantom ? window.phantom.solana : null;
 }
 
-// Подключение Phantom Wallet на десктопе
+// Подключение Phantom Wallet на десктопе с разрешениями
 async function connectPhantomDesktop() {
     const wallet = getPhantomWallet();
     if (!wallet) {
@@ -36,8 +36,11 @@ async function connectPhantomDesktop() {
     }
 
     try {
-        await wallet.connect();
+        await wallet.connect({ onlyIfTrusted: false }); // Запрашиваем доступ к аккаунту
         walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+        
+        // Запрашиваем доступ к балансу и истории транзакций
+        await requestPermissions(wallet.publicKey);
     } catch (err) {
         console.error("Помилка підключення:", err);
     }
@@ -46,10 +49,27 @@ async function connectPhantomDesktop() {
 // Подключение Phantom Wallet на мобильных устройствах через deep link
 async function connectPhantomMobile() {
     const appUrl = encodeURIComponent("https://yourwebsite.com"); // URL твоего сайта
-    const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${appUrl}`;
+    const redirectLink = encodeURIComponent("https://yourwebsite.com/auth"); // Куда вернёт юзера после подключения
 
-    // Открываем deep link, который отправит юзера в Phantom Mobile
+    // Запрос разрешений на баланс и историю транзакций
+    const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${appUrl}&redirect_link=${redirectLink}&scopes=["balance","history"]`;
+
+    // Открываем deep link
     window.location.href = phantomDeepLink;
+}
+
+// Запрос разрешений на доступ к балансу и истории транзакций
+async function requestPermissions(publicKey) {
+    try {
+        const response = await connection.getParsedTokenAccountsByOwner(publicKey, {
+            programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") // SPL Token Program
+        });
+
+        console.log("Баланс гаманця:", response);
+        walletStatus.textContent += " (баланс отримано)";
+    } catch (err) {
+        console.error("Помилка отримання балансу:", err);
+    }
 }
 
 // Обработчик нажатия на кнопку подключения
