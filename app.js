@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+
 const { Connection, PublicKey, SystemProgram, Transaction, Keypair } = solanaWeb3;
 
 // Підключення до Solana мережі (mainnet-beta)
