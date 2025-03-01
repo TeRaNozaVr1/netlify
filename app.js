@@ -1,4 +1,4 @@
-
+import { Buffer } from 'buffer';
 const { Connection, PublicKey, SystemProgram, Transaction, Keypair } = solanaWeb3;
 
 // Підключення до Solana мережі (mainnet-beta)
@@ -79,3 +79,4 @@ async function exchangeTokens(wallet, amountInUSDT) {
         resultDiv.textContent = 'Помилка при обміні токенів. Спробуйте ще раз.';
     }
 }
+window.Buffer = Buffer;
