@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 localStorage.setItem("phantomWallet", response.publicKey.toString());
 
                 // Оновлюємо UI
-                walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
+                walletStatus.textContent = Connected: ${response.publicKey.toString()};
                 connectWalletBtn.textContent = "Wallet Connected";
                 connectWalletBtn.disabled = true;
 
@@ -25,8 +25,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
 
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                // Прибрано redirect_link, щоб не повертати користувача
-                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta`;
+                // ✅ Правильний deeplink, що гарантує запит дозволу!
+                const deeplink = https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)};
                 window.location.href = deeplink;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
@@ -39,9 +39,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     async function checkAutoConnect() {
         const savedWallet = localStorage.getItem("phantomWallet");
         if (savedWallet) {
-            walletStatus.textContent = `Connected: ${savedWallet}`;
-            connectWalletBtn.textContent = "Wallet Connected";
-            connectWalletBtn.disabled = true;
+            await connectWallet(true);
         }
     }
 
@@ -49,7 +47,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     checkAutoConnect();
 });
-
 
 
 
