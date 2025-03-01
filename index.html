@@ -133,7 +133,17 @@
      <button id="connectPhantom">Підключити Phantom</button>
 <button id="connectSolflare">Підключити Solflare</button>
     </div>
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("connectPhantom")?.addEventListener("click", () => {
+        connectWallet("phantom");
+    });
 
+    document.getElementById("connectSolflare")?.addEventListener("click", () => {
+        connectWallet("solflare");
+    });
+});
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
