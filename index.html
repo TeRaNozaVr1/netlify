@@ -39,24 +39,24 @@
     <button onclick="connectPhantom()">Підключити гаманець</button>
     <p id="walletAddress">Адреса гаманця: Не підключено</p>
 
-     <script>
+    <script>
         function connectPhantom() {
             let deeplink;
             if (/Android/i.test(navigator.userAgent)) {
-                // Для Android
-                deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
+                // Android deeplink для Phantom Wallet
+                deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://your-website-url.com")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
             } else if (/iPhone|iPad/i.test(navigator.userAgent)) {
-                // Для iOS
-                deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+                // iOS deeplink для Phantom Wallet
+                deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://your-website-url.com")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
                 window.open("https://phantom.app/", "_blank");
                 return;
             }
-            
+
             // Відкриваємо deeplink
             window.location.href = deeplink;
-            
+
             // Резервний варіант для деяких браузерів
             setTimeout(() => {
                 window.open(deeplink, "_self");
@@ -74,7 +74,6 @@
             const { publicKey } = getUrlParams();
             if (publicKey) {
                 document.getElementById("walletAddress").innerText = `Адреса гаманця: ${publicKey}`;
-                console.log(`Адреса гаманця отримана: ${publicKey}`);
             } else {
                 console.log('Адреса гаманця не знайдена в URL.');
             }
@@ -82,6 +81,7 @@
     </script>
 </body>
 </html>
+
 
 
 
