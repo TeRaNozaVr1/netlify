@@ -1,5 +1,6 @@
-const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
-const { PublicKey, SystemProgram, Transaction, Keypair } = solanaWeb3;
+const { Connection, PublicKey, SystemProgram, Transaction, Keypair } = solanaWeb3;
+const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+
 
 // Адреси токенів
 const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
