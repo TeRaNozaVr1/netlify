@@ -1,103 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Token Exchange</title>
+    <title>Presale Widget</title>
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.1.8/dist/index.iife.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/5.7.1/index.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Anta&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #143021;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
-            margin: 0;
         }
-        .iphone {
-            width: 320px;
-            height: 600px;
-            background: white;
-            border-radius: 40px;
-            border: 6px solid black;
-            position: relative;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .widget {
+            background: #143021;
             padding: 20px;
-        }
-        .notch {
-            width: 150px;
-            height: 30px;
-            background: black;
-            border-radius: 15px;
-            position: absolute;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        .container {
-            width: 90%;
+            border-radius: 20px;
             text-align: center;
+            width: 350px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-family: 'Anta', sans-serif;
+            color: white;
+            font-size: 32px;
         }
         button {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
-            cursor: pointer;
             border: none;
-            border-radius: 5px;
-            background: #007bff;
-            color: white;
+            border-radius: 10px;
+            background: #98ff38;
+            color: black;
             font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
         }
         button:hover {
-            background: #0056b3;
+            background: #85e732;
+        }
+        .input-group {
+            margin: 10px 0;
         }
         input, select {
             width: calc(100% - 20px);
             padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
         }
-        #walletStatus, #result {
-            margin: 10px 0;
+        label {
+            color: white;
             font-size: 14px;
-            color: #333;
         }
-        .apple-logo {
-            position: absolute;
-            bottom: 15px;
-            width: 40px;
-            height: 40px;
-            background: black;
-            clip-path: path("M25 2C21 2 18 6 18 6S17 8 15 8C12 8 8 4 4 8C0 12 2 20 7 22C8 22 9 22 10 21C11 23 13 25 16 26C16 26 16 26 16 26C17 26 17 26 18 26C19 26 19 26 20 26C23 25 25 23 26 21C27 22 28 22 29 22C34 20 36 12 32 8C28 4 24 8 22 8C20 8 19 6 19 6S17 2 13 2H25Z");
+        #walletStatus {
+            color: white;
+            font-size: 14px;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <div class="iphone">
-        <div class="notch"></div>
-        <div class="container">
-            <button id="connectWalletBtn">Підключити гаманець</button>
-            <p id="walletStatus"></p>
-            
-            <label>
-                <input type="radio" name="tokenType" value="USDT" checked> USDT
-            </label>
-            <label>
-                <input type="radio" name="tokenType" value="USDC"> USDC
-            </label>
-
-            <input type="number" id="amount" placeholder="Введіть кількість" />
-            <button id="exchangeBtn">Обміняти</button>
-            <div id="result" style="display: none;"></div>
+    <div class="widget">
+        <h1>PRESALE</h1>
+        <button id="connectWalletBtn">ПІДКЛЮЧИТИ ГАМАНЕЦЬ</button>
+        <p id="walletStatus">гаманець не підключено</p>
+        
+        <div class="input-group">
+            <select id="tokenSelect">
+                <option value="USDT">USDT</option>
+                <option value="USDC">USDC</option>
+            </select>
         </div>
-        <div class="apple-logo"></div>
+        
+        <div class="input-group">
+            <input type="number" id="amount" placeholder="Введіть суму" />
+        </div>
+        
+        <button id="exchangeBtn">Обміняти</button>
     </div>
     <script src="app.js"></script>
 </body>
