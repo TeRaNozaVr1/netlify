@@ -17,58 +17,48 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-const SOLANA_WALLETS = {
-    phantom: {
-        connect: `https://phantom.app/ul/v1/connect?app_url=https://cool-kataifi-90a5d5.netlify.app&redirect_link=`,
-    },
-    solflare: {
-        connect: `https://solflare.com/connect?redirect=`,
-    }
-};
-
-// Функція для визначення мобільного пристрою
+// Функция для определения мобильного устройства
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Отримання диплінку
-function getDeepLink(wallet) {
-    if (!SOLANA_WALLETS[wallet]) return null;
-    return SOLANA_WALLETS[wallet].connect + encodeURIComponent(window.location.href);
+// Определяем доступные кошельки
+const getWallet = (walletType) => {
+    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
+        return window.phantom.solana;
+    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+        return window.solflare;
+    }
+    return null;
+};
+
+// Открытие и закрытие popup
+connectWalletBtn.addEventListener("click", () => {
+    walletPopup.classList.add("show-popup");
+});
+
+function closePopup() {
+    walletPopup.classList.remove("show-popup");
 }
 
-// Функція для підключення гаманця через диплінк
-function connectWallet(wallet) {
-    if (!isMobile()) {
-        alert("Будь ласка, відкрийте це на мобільному пристрої.");
+// Подключение кошелька
+function connectWallet(walletType) {
+    closePopup();
+    let wallet = getWallet(walletType);
+    
+    if (!wallet) {
+        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
         return;
     }
-    const deepLink = getDeepLink(wallet);
-    if (deepLink) {
-        window.location.href = deepLink;
-    } else {
-        alert("Обраний гаманець не підтримується.");
-    }
+
+    wallet.connect()
+        .then(() => {
+            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+        })
+        .catch(err => {
+            console.error("Помилка підключення:", err);
+        });
 }
-
-// Отримання адреси гаманця після повернення з мобільного гаманця
-function getWalletAddressFromUrl() {
-    const params = new URLSearchParams(window.location.search);
-    const walletAddress = params.get("wallet");
-    if (walletAddress) {
-        walletStatus.textContent = `Гаманець підключено: ${walletAddress}`;
-    }
-}
-
-window.onload = getWalletAddressFromUrl;
-
-document.getElementById("connectPhantom").addEventListener("click", () => {
-    connectWallet("phantom");
-});
-
-document.getElementById("connectSolflare").addEventListener("click", () => {
-    connectWallet("solflare");
-});
 
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
@@ -92,30 +82,28 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const walletAddress = params.get("wallet");
-
-    if (!walletAddress) {
+    let wallet = getWallet("phantom"); // Используем Phantom как дефолт
+    if (!wallet || !wallet.publicKey) {
         alert("Будь ласка, підключіть гаманець");
         return;
     }
 
-    const balanceUSDT = await getTokenBalance(walletAddress, USDT_MINT_ADDRESS);
-    const balanceUSDC = await getTokenBalance(walletAddress, USDC_MINT_ADDRESS);
+    const balanceUSDT = await getTokenBalance(wallet.publicKey, USDT_MINT_ADDRESS);
+    const balanceUSDC = await getTokenBalance(wallet.publicKey, USDC_MINT_ADDRESS);
 
     if (balanceUSDT < amount && balanceUSDC < amount) {
         alert("Недостатньо коштів для обміну!");
         return;
     }
 
-    await exchangeTokens(walletAddress, amount);
+    await exchangeTokens(wallet, amount);
 });
 
 // Функція для обміну USDT/USDC
-async function exchangeTokens(walletAddress, amountInUSDT) {
+async function exchangeTokens(wallet, amountInUSDT) {
     try {
         const transaction = new Transaction();
-        const sender = new PublicKey(walletAddress);
+        const sender = wallet.publicKey;
 
         const hasUSDT = await getTokenBalance(sender, USDT_MINT_ADDRESS) >= amountInUSDT;
         const mintAddress = hasUSDT ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
@@ -123,7 +111,7 @@ async function exchangeTokens(walletAddress, amountInUSDT) {
         const transferInstruction = SystemProgram.transfer({
             fromPubkey: sender,
             toPubkey: SPL_TOKEN_ADDRESS,
-            lamports: amountInUSDT * 1000000000
+            lamports: amountInUSDT * 1000000000 // Конвертація
         });
 
         transaction.add(transferInstruction);
@@ -132,10 +120,72 @@ async function exchangeTokens(walletAddress, amountInUSDT) {
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = sender;
 
-        console.log(`Транзакція готова до підпису, відправте її у ваш гаманець.`);
+        const signedTransaction = await wallet.signTransaction(transaction);
+        const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
+
+        await connection.confirmTransaction(txid);
+        console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
+        resultDiv.style.display = "block";
+        resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
         resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
+    }
+}
+
+// Отримання активів власника
+async function getAssetsByOwner(ownerAddress) {
+    const body = {
+        jsonrpc: "2.0",
+        method: "getAssetsByOwner",
+        params: {
+            ownerAddress: ownerAddress.toString(),
+            limit: 10,
+            page: 1
+        },
+        id: 1
+    };
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+        console.log("Активи власника:", data);
+        return data.result;
+    } catch (error) {
+        console.error("Помилка отримання активів:", error);
+    }
+}
+
+// Отримання історії транзакцій
+async function getSignaturesForAssetV2(assetId) {
+    const body = {
+        jsonrpc: "2.0",
+        id: "string",
+        method: "getSignaturesForAssetV2",
+        params: {
+            id: assetId,
+            page: 1,
+            limit: 100
+        }
+    };
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+        console.log("Історія транзакцій:", data);
+        return data.result;
+    } catch (error) {
+        console.error("Помилка отримання історії:", error);
     }
 }
