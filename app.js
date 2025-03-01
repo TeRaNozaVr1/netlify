@@ -11,7 +11,13 @@ const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Kh
 
 // UI Елементи
 const connectWalletBtn = document.getElementById("connectWalletBtn");
-connectWalletBtn.addEventListener("click", () => connectWallet("phantom"));
+connectWalletBtn.addEventListener("click", () => {
+    if (isMobile()) {
+        connectViaDeepLink("phantom");
+    } else {
+        connectWallet("phantom");
+    }
+});
 const walletStatus = document.getElementById("walletStatus");
 const exchangeBtn = document.getElementById("exchangeBtn");
 const resultDiv = document.getElementById("result");
@@ -33,18 +39,32 @@ const getWallet = (walletType) => {
     return null;
 };
 
+// Підключення гаманця через диплінк для мобільних пристроїв
+function connectViaDeepLink(walletType) {
+    let deepLink;
+    if (isMobile()) {
+        if (/iPhone|iPad/i.test(navigator.userAgent)) {
+            deepLink = walletType === "phantom" 
+                ? "https://phantom.app/ul/v1/connect?app_url=https://yourapp.com"
+                : "https://solflare.com/connect";
+        } else if (/Android/i.test(navigator.userAgent)) {
+            deepLink = walletType === "phantom" 
+                ? "phantom://v1/connect?app_url=https://yourapp.com"
+                : "solflare://connect";
+        }
+    } else {
+        deepLink = walletType === "phantom" 
+            ? "https://phantom.app/ul/v1/connect?app_url=https://yourapp.com"
+            : "https://solflare.com/connect";
+    }
+    window.location.href = deepLink;
+}
+
 // Підключення гаманця
 async function connectWallet(walletType) {
     let wallet = getWallet(walletType);
     if (!wallet) {
-        if (isMobile()) {
-            const deepLink = walletType === "phantom" 
-                ? "https://phantom.app/ul/v1/connect?app_url=https://yourapp.com"
-                : "https://solflare.com/connect";
-            window.location.href = deepLink;
-        } else {
-            alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
-        }
+        connectViaDeepLink(walletType);
         return;
     }
     
