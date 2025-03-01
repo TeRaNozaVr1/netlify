@@ -1,7 +1,22 @@
+"scripts": {
+    "debug": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+},
 {
   "dependencies": {
+    "buffer": "^6.0.3",
+"process": "^0.11.10",
+"stream-browserify": "^3.0.0"
+"react-app-rewired": "^2.2.1"
     "@solana/spl-token": "^0.4.12",
     "@solana/web3.js": "^1.98.0",
-    "buffer": "^6.0.3"
   }
+   "scripts": {
+    "debug": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-app-rewired eject"
+  },
 }
