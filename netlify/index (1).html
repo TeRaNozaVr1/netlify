@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Підключення Phantom Wallet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #3700b3;
+        }
+        p {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Підключення до Phantom Wallet</h1>
+    <button onclick="connectPhantom()">Підключити гаманець</button>
+    <p id="walletAddress">Адреса гаманця: Не підключено</p>
+
+    <script>
+        function connectPhantom() {
+            let deeplink;
+            if (/Android/i.test(navigator.userAgent)) {
+                // Android deeplink для Phantom Wallet
+                deeplink = `intent://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://your-website-url.com")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}#Intent;scheme=https;package=app.phantom;end;`;
+            } else if (/iPhone|iPad/i.test(navigator.userAgent)) {
+                // iOS deeplink для Phantom Wallet
+                deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://your-website-url.com")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+            } else {
+                alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
+                window.open("https://phantom.app/", "_blank");
+                return;
+            }
+
+            // Відкриваємо deeplink
+            window.location.href = deeplink;
+
+            // Резервний варіант для деяких браузерів
+            setTimeout(() => {
+                window.open(deeplink, "_self");
+            }, 100);
+        }
+
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                publicKey: params.get("public_key")
+            };
+        }
+
+        (function handleRedirect() {
+            const { publicKey } = getUrlParams();
+            if (publicKey) {
+                document.getElementById("walletAddress").innerText = `Адреса гаманця: ${publicKey}`;
+            } else {
+                console.log('Адреса гаманця не знайдена в URL.');
+            }
+        })();
+    </script>
+</body>
+</html>
+
+
+
+
+
