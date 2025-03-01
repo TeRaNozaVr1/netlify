@@ -126,7 +126,7 @@ async function exchangeTokens(wallet, amountInUSDT) {
         await connection.confirmTransaction(txid);
         console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
         resultDiv.style.display = "block";
-        resultDiv.textContent = Обмін завершено! TXID: ${txid};
+        resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
