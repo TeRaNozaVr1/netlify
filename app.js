@@ -5,19 +5,30 @@ document.addEventListener("DOMContentLoaded", function () {
     async function connectWallet() {
         if (window.solana && window.solana.isPhantom) {
             try {
-                // Запит на підключення гаманця
+                // Запит на дозвіл на підключення, перегляд балансу та історії транзакцій
                 const response = await window.solana.connect({ onlyIfTrusted: false });
+
+                // Відображення публічного ключа після підключення
                 walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
                 connectWalletBtn.textContent = "Wallet Connected";
                 connectWalletBtn.disabled = true;
+
+                // Отримання інформації про баланс
+                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
+                const balance = await connection.getBalance(response.publicKey);
+                console.log(`Balance: ${balance / solanaWeb3.LAMPORTS_PER_SOL} SOL`);
+
+                // Перевірка історії транзакцій
+                const transactions = await connection.getConfirmedSignaturesForAddress2(response.publicKey);
+                console.log("Recent transactions:", transactions);
             } catch (err) {
                 console.error("Connection failed:", err);
                 walletStatus.textContent = "Connection failed!";
             }
         } else {
-            // Використовуємо deeplink для мобільних пристроїв
+            // Для мобільних пристроїв відкриваємо Phantom через deeplink
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodeURIComponent(window.location.href)}`;
+                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
                 window.location.href = deeplink;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
@@ -28,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     connectWalletBtn.addEventListener("click", connectWallet);
 });
+
 
 
 
