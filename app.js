@@ -6,12 +6,11 @@ const connection = new Connection(endpoint, "confirmed");
 
 // Адреса гаманців
 const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
-const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233v78WFD4AfezzcMiViu26dF3cVU");
+const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
 const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
 // UI Елементи
 const connectWalletBtn = document.getElementById("connectWalletBtn");
-const walletSelect = document.getElementById("walletSelect"); // Выпадающий список кошельков
 const walletStatus = document.getElementById("walletStatus");
 const exchangeBtn = document.getElementById("exchangeBtn");
 const resultDiv = document.getElementById("result");
@@ -22,38 +21,33 @@ function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Функция для получения выбранного кошелька
-function getWallet() {
-    const selectedWallet = walletSelect.value;
-
-    if (selectedWallet === "phantom" && window.phantom?.solana?.isPhantom) {
+// Определяем доступные кошельки
+const getWallet = () => {
+    if (window.phantom?.solana?.isPhantom) {
         return window.phantom.solana;
-    } else if (selectedWallet === "solflare" && window.solflare?.isSolflare) {
+    } else if (window.solflare?.isSolflare) {
         return window.solflare;
     }
     return null;
-}
+};
 
 // Подключение кошелька
 connectWalletBtn.addEventListener("click", async () => {
-    const wallet = getWallet();
+    let wallet = getWallet();
 
     if (!wallet) {
         if (isMobile()) {
-            if (walletSelect.value === "phantom") {
-                window.open("https://phantom.app/ul/browse", "_blank");
-            } else if (walletSelect.value === "solflare") {
-                window.open("https://solflare.com/", "_blank");
-            }
+            // Открываем приложение кошелька
+            window.open("https://phantom.app/ul/browse", "_blank");
             return;
         } else {
-            alert("Будь ласка, встановіть обраний гаманець");
+            alert("Будь ласка, встановіть Phantom Wallet або Solflare");
             return;
         }
     }
 
     try {
-        await wallet.connect({ onlyIfTrusted: false }); // Запрос подтверждения на телефоне
+        await wallet.connect();
         walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
     } catch (err) {
         console.log("Помилка підключення:", err);
@@ -82,7 +76,7 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    const wallet = getWallet();
+    let wallet = getWallet();
     if (!wallet || !wallet.publicKey) {
         alert("Будь ласка, підключіть гаманець");
         return;
