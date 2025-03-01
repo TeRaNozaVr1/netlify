@@ -133,6 +133,83 @@
         <button onclick="connectWallet('phantom')">Phantom</button>
         <button onclick="connectWallet('solflare')">Solflare</button>
     </div>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Wallet Connect</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.75.0/solanaWeb3.min.js"></script>
+</head>
+<body>
+    <button id="connectWalletBtn">Підключити гаманець</button>
+    <p id="walletStatus">Гаманець не підключено</p>
+
+    <script>
+        const { Connection, PublicKey, clusterApiUrl } = solanaWeb3;
+
+        // Solana RPC
+        const endpoint = clusterApiUrl("mainnet-beta");
+        const connection = new Connection(endpoint, "confirmed");
+
+        // Кнопка підключення
+        const connectWalletBtn = document.getElementById("connectWalletBtn");
+        const walletStatus = document.getElementById("walletStatus");
+
+        // Функція перевірки мобільного пристрою
+        const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // Функція отримання гаманця
+        const getWallet = (walletType) => {
+            if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
+                return window.phantom.solana;
+            } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+                return window.solflare;
+            }
+            return null;
+        };
+
+        // Функція підключення через диплінк
+        const connectViaDeepLink = (walletType) => {
+            const deepLink = isMobile()
+                ? walletType === "phantom"
+                    ? "phantom://v1/connect?app_url=https://yourapp.com"
+                    : "solflare://connect"
+                : walletType === "phantom"
+                    ? "https://phantom.app/ul/v1/connect?app_url=https://yourapp.com"
+                    : "https://solflare.com/connect";
+            
+            window.location.href = deepLink;
+        };
+
+        // Функція підключення гаманця
+        const connectWallet = async (walletType) => {
+            const wallet = getWallet(walletType);
+            if (!wallet) {
+                connectViaDeepLink(walletType);
+                return;
+            }
+
+            try {
+                await wallet.connect();
+                console.log("Гаманець підключено:", wallet.publicKey.toString());
+                walletStatus.textContent = `Гаманець: ${wallet.publicKey.toString()}`;
+            } catch (err) {
+                console.error("Помилка підключення:", err);
+            }
+        };
+
+        // Додаємо обробник подій для кнопки
+        connectWalletBtn.addEventListener("click", () => {
+            if (isMobile()) {
+                connectViaDeepLink("phantom");
+            } else {
+                connectWallet("phantom");
+            }
+        });
+    </script>
+</body>
+</html>
 
     <script src="app.js"></script>
 </body>
