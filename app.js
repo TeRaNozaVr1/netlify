@@ -53,7 +53,7 @@ function connectWallet(walletType) {
 
     wallet.connect()
         .then(() => {
-            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+            walletStatus.textContent = Гаманець підключено: ${wallet.publicKey.toString()};
         })
         .catch(err => {
             console.error("Помилка підключення:", err);
@@ -124,9 +124,9 @@ async function exchangeTokens(wallet, amountInUSDT) {
         const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
 
         await connection.confirmTransaction(txid);
-        console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
+        console.log(Транзакція успішно надіслана! TXID: ${txid});
         resultDiv.style.display = "block";
-        resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
+        resultDiv.textContent = Обмін завершено! TXID: ${txid};
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
@@ -188,4 +188,4 @@ async function getSignaturesForAssetV2(assetId) {
     } catch (error) {
         console.error("Помилка отримання історії:", error);
     }
-
+}
