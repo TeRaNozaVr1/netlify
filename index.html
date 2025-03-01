@@ -62,16 +62,11 @@
         }
 
         async function connectPhantom() {
-            if (/Android|iPhone/i.test(navigator.userAgent)) {
-                const { dappEncryptionPublicKey, dappEncryptionPrivateKey } = await generateKeyPair();
-                localStorage.setItem("phantom_private_key", JSON.stringify(dappEncryptionPrivateKey));
-                
-                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&dapp_encryption_public_key=${dappEncryptionPublicKey}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
-                window.location.href = deeplink;
-            } else {
-                alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
-                window.open("https://phantom.app/", "_blank");
-            }
+            const { dappEncryptionPublicKey, dappEncryptionPrivateKey } = await generateKeyPair();
+            localStorage.setItem("phantom_private_key", JSON.stringify(dappEncryptionPrivateKey));
+            
+            const deeplink = `phantom://ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&dapp_encryption_public_key=${dappEncryptionPublicKey}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+            window.location.href = deeplink;
         }
 
         function getUrlParams() {
