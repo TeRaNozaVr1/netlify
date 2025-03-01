@@ -1,27 +1,31 @@
-import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
-import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
-import { WalletProvider } from "@solana/wallet-adapter-react";
-import { useWallet } from "@solana/wallet-adapter-react";
+document.addEventListener("DOMContentLoaded", async function () {
+    const connectWalletBtn = document.getElementById("connectWalletBtn");
+    const walletStatus = document.getElementById("walletStatus");
 
-const wallets = [new PhantomWalletAdapter()];
+    async function connectWallet() {
+        if ("solana" in window) {
+            try {
+                const provider = window.solana;
+                if (!provider.isPhantom) {
+                    alert("Phantom Wallet not found!");
+                    return;
+                }
 
-function App() {
-    return (
-        <WalletProvider wallets={wallets} autoConnect>
-            <WalletConnect />
-        </WalletProvider>
-    );
-}
+                await provider.connect();
+                walletStatus.textContent = `Connected: ${provider.publicKey.toString()}`;
+                connectWalletBtn.textContent = "Wallet Connected";
+                connectWalletBtn.disabled = true;
 
-function WalletConnect() {
-    const { connect, connected, publicKey } = useWallet();
+            } catch (err) {
+                console.error("Connection failed:", err);
+                walletStatus.textContent = "Connection failed!";
+            }
+        } else {
+            alert("Phantom Wallet is not installed!");
+            window.open("https://phantom.app/", "_blank");
+        }
+    }
 
-    return (
-        <div>
-            {connected ? (
-                <p>Connected: {publicKey.toBase58()}</p>
-            ) : (
-                <button onClick={connect}>Connect Wallet</button>
-            )}
-        </div>
-    );
+    connectWalletBtn.addEventListener("click", connectWallet);
+});
+
