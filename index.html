@@ -108,32 +108,35 @@
     </style>
 </head>
 <body>
-    <div class="widget">
-        <h1>PRESALE</h1>
-        <button id="connectWalletBtn">CONNECT WALLET</button>
-        <p id="walletStatus">Wallet not connected</p>
-        
-        <div class="input-group">
-            <select id="tokenSelect">
-                <option value="USDT">USDT</option>
-                <option value="USDC">USDC</option>
-            </select>
-        </div>
-        
-        <div class="input-group">
-            <input type="number" id="amount" placeholder="Enter amount" />
-        </div>
-        
-        <button id="exchangeBtn">Exchange</button>
-    </div>
-    
-    <div class="popup" id="walletPopup">
-        <span class="close-btn" onclick="closePopup()">&times;</span>
-        <p>Select Wallet:</p>
+    <h1>Solana Wallet Connect</h1>
+    <button id="connectWalletBtn">Підключити гаманець</button>
+    <p id="walletStatus">Гаманець не підключено</p>
+    <div id="walletPopup" class="popup">
         <button onclick="connectWallet('phantom')">Phantom</button>
         <button onclick="connectWallet('solflare')">Solflare</button>
+        <button onclick="closePopup()">Закрити</button>
     </div>
-<script src="walletMobileConnect.js"></script>
+    
+    <button id="exchangeBtn">Обміняти USDT/USDC</button>
+    <input type="number" id="amount" placeholder="Кількість">
+    <div id="result" style="display:none;"></div>
+    
+    <script src="walletMobileConnect.js"></script>
     <script src="app.js"></script>
+    
+    <script>
+        document.getElementById("connectWalletBtn").addEventListener("click", function () {
+            document.getElementById("walletPopup").classList.add("show-popup");
+        });
+        
+        function closePopup() {
+            document.getElementById("walletPopup").classList.remove("show-popup");
+        }
+
+        function connectWallet(walletType) {
+            closePopup();
+            window.walletUtils.connectWallet(walletType);
+        }
+    </script>
 </body>
 </html>
