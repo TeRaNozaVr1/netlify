@@ -17,49 +17,48 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-// Функция определения мобильного устройства
+// Функция для определения мобильного устройства
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Проверка наличия Phantom Wallet
-function getPhantomWallet() {
-    return window.phantom?.solana?.isPhantom ? window.phantom.solana : null;
+// Определяем доступные кошельки
+const getWallet = (walletType) => {
+    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
+        return window.phantom.solana;
+    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+        return window.solflare;
+    }
+    return null;
+};
+
+// Открытие и закрытие popup
+connectWalletBtn.addEventListener("click", () => {
+    walletPopup.classList.add("show-popup");
+});
+
+function closePopup() {
+    walletPopup.classList.remove("show-popup");
 }
 
-// Подключение Phantom Wallet (ПК)
-async function connectPhantom() {
-    const wallet = getPhantomWallet();
+// Подключение кошелька
+function connectWallet(walletType) {
+    closePopup();
+    let wallet = getWallet(walletType);
     
     if (!wallet) {
-        alert("Будь ласка, встановіть Phantom Wallet.");
+        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
         return;
     }
 
-    try {
-        await wallet.connect();
-        walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-    } catch (err) {
-        console.error("Помилка підключення:", err);
-    }
+    wallet.connect()
+        .then(() => {
+            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+        })
+        .catch(err => {
+            console.error("Помилка підключення:", err);
+        });
 }
-
-// Подключение Phantom Wallet (мобильное устройство)
-async function connectPhantomMobile() {
-    const phantomDeepLink = "https://phantom.app/ul/v1/connect?app_url=https://yourwebsite.com";
-
-    // Открываем deep link на мобильных устройствах
-    window.location.href = phantomDeepLink;
-}
-
-// Клик по кнопке "Подключить кошелек"
-connectWalletBtn.addEventListener("click", async () => {
-    if (isMobile()) {
-        connectPhantomMobile();
-    } else {
-        await connectPhantom();
-    }
-});
 
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
