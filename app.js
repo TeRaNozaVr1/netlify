@@ -39,22 +39,34 @@ const getWallet = (walletType) => {
     return null;
 };
 
+// Генерація ключа шифрування для підключення через диплінк
+async function generateEncryptionKey() {
+    const keyPair = await window.crypto.subtle.generateKey(
+        { name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+        true,
+        ["encrypt", "decrypt"]
+    );
+    const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+    return btoa(String.fromCharCode(...new Uint8Array(publicKey))); // Кодуємо в Base64
+}
+
 // Підключення гаманця через диплінк для мобільних пристроїв
-function connectViaDeepLink(walletType) {
+async function connectViaDeepLink(walletType) {
+    const encryptionKey = await generateEncryptionKey();
     let deepLink;
     if (isMobile()) {
         if (/iPhone|iPad/i.test(navigator.userAgent)) {
             deepLink = walletType === "phantom" 
-                ? "https://phantom.app/ul/v1/connect?app_url=https://yourapp.com"
+                ? `https://phantom.app/ul/v1/connect?app_url=https://yourapp.com&dapp_encryption_public_key=${encryptionKey}&cluster=mainnet-beta`
                 : "https://solflare.com/connect";
         } else if (/Android/i.test(navigator.userAgent)) {
             deepLink = walletType === "phantom" 
-                ? "phantom://v1/connect?app_url=https://yourapp.com"
+                ? `phantom://v1/connect?app_url=https://yourapp.com&dapp_encryption_public_key=${encryptionKey}&cluster=mainnet-beta`
                 : "solflare://connect";
         }
     } else {
         deepLink = walletType === "phantom" 
-            ? "https://phantom.app/ul/v1/connect?app_url=https://yourapp.com"
+            ? `https://phantom.app/ul/v1/connect?app_url=https://yourapp.com&dapp_encryption_public_key=${encryptionKey}&cluster=mainnet-beta`
             : "https://solflare.com/connect";
     }
     window.location.href = deepLink;
@@ -75,6 +87,7 @@ async function connectWallet(walletType) {
         console.error("Помилка підключення:", err);
     }
 }
+
 
 // Отримання балансу
 async function getTokenBalance(ownerAddress, mintAddress) {
@@ -186,3 +199,4 @@ async function getTransactionHistory(publicKey) {
         console.error("Помилка отримання історії:", error);
     }
 }
+
