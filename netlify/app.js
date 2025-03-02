@@ -10,55 +10,10 @@ const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26d
 const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
 // UI Елементи
-const connectWalletBtn = document.getElementById("connectWalletBtn");
-const walletStatus = document.getElementById("walletStatus");
 const exchangeBtn = document.getElementById("exchangeBtn");
 const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
-const walletPopup = document.getElementById("walletPopup");
-
-// Функция для определения мобильного устройства
-function isMobile() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-// Определяем доступные кошельки
-const getWallet = (walletType) => {
-    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
-        return window.phantom.solana;
-    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
-        return window.solflare;
-    }
-    return null;
-};
-
-// Открытие и закрытие popup
-connectWalletBtn.addEventListener("click", () => {
-    walletPopup.classList.add("show-popup");
-});
-
-function closePopup() {
-    walletPopup.classList.remove("show-popup");
-}
-
-// Подключение кошелька
-function connectWallet(walletType) {
-    closePopup();
-    let wallet = getWallet(walletType);
-    
-    if (!wallet) {
-        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
-        return;
-    }
-
-    wallet.connect()
-        .then(() => {
-            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-        })
-        .catch(err => {
-            console.error("Помилка підключення:", err);
-        });
-}
+const walletInput = document.getElementById("walletAddress");
 
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
@@ -77,39 +32,39 @@ async function getTokenBalance(ownerAddress, mintAddress) {
 // Обмін токенів
 exchangeBtn.addEventListener("click", async () => {
     const amount = parseFloat(amountInput.value);
+    const userWalletAddress = walletInput.value.trim();
+
+    if (!userWalletAddress || !PublicKey.isOnCurve(userWalletAddress)) {
+        alert("Будь ласка, введіть коректну адресу Solana гаманця");
+        return;
+    }
+
     if (isNaN(amount) || amount <= 0) {
         alert("Будь ласка, введіть коректну кількість USDT/USDC");
         return;
     }
 
-    let wallet = getWallet("phantom"); // Используем Phantom как дефолт
-    if (!wallet || !wallet.publicKey) {
-        alert("Будь ласка, підключіть гаманець");
-        return;
-    }
-
-    const balanceUSDT = await getTokenBalance(wallet.publicKey, USDT_MINT_ADDRESS);
-    const balanceUSDC = await getTokenBalance(wallet.publicKey, USDC_MINT_ADDRESS);
+    const userPublicKey = new PublicKey(userWalletAddress);
+    const balanceUSDT = await getTokenBalance(userPublicKey, USDT_MINT_ADDRESS);
+    const balanceUSDC = await getTokenBalance(userPublicKey, USDC_MINT_ADDRESS);
 
     if (balanceUSDT < amount && balanceUSDC < amount) {
         alert("Недостатньо коштів для обміну!");
         return;
     }
 
-    await exchangeTokens(wallet, amount);
+    await exchangeTokens(userPublicKey, amount);
 });
 
 // Функція для обміну USDT/USDC
-async function exchangeTokens(wallet, amountInUSDT) {
+async function exchangeTokens(userPublicKey, amountInUSDT) {
     try {
         const transaction = new Transaction();
-        const sender = wallet.publicKey;
-
-        const hasUSDT = await getTokenBalance(sender, USDT_MINT_ADDRESS) >= amountInUSDT;
+        const hasUSDT = await getTokenBalance(userPublicKey, USDT_MINT_ADDRESS) >= amountInUSDT;
         const mintAddress = hasUSDT ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
 
         const transferInstruction = SystemProgram.transfer({
-            fromPubkey: sender,
+            fromPubkey: userPublicKey,
             toPubkey: SPL_TOKEN_ADDRESS,
             lamports: amountInUSDT * 1000000000 // Конвертація
         });
@@ -118,74 +73,14 @@ async function exchangeTokens(wallet, amountInUSDT) {
 
         const { blockhash } = await connection.getLatestBlockhash();
         transaction.recentBlockhash = blockhash;
-        transaction.feePayer = sender;
+        transaction.feePayer = userPublicKey;
 
-        const signedTransaction = await wallet.signTransaction(transaction);
-        const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
-
-        await connection.confirmTransaction(txid);
-        console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
+        console.log("Готова транзакція для підпису:", transaction);
         resultDiv.style.display = "block";
-        resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
+        resultDiv.textContent = `Транзакція підготовлена, підпишіть та надішліть її вручну.`;
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
         resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
-    }
-}
-
-// Отримання активів власника
-async function getAssetsByOwner(ownerAddress) {
-    const body = {
-        jsonrpc: "2.0",
-        method: "getAssetsByOwner",
-        params: {
-            ownerAddress: ownerAddress.toString(),
-            limit: 10,
-            page: 1
-        },
-        id: 1
-    };
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
-
-        const data = await response.json();
-        console.log("Активи власника:", data);
-        return data.result;
-    } catch (error) {
-        console.error("Помилка отримання активів:", error);
-    }
-}
-
-// Отримання історії транзакцій
-async function getSignaturesForAssetV2(assetId) {
-    const body = {
-        jsonrpc: "2.0",
-        id: "string",
-        method: "getSignaturesForAssetV2",
-        params: {
-            id: assetId,
-            page: 1,
-            limit: 100
-        }
-    };
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
-
-        const data = await response.json();
-        console.log("Історія транзакцій:", data);
-        return data.result;
-    } catch (error) {
-        console.error("Помилка отримання історії:", error);
     }
 }
