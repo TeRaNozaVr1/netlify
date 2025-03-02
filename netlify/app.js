@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
     const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
-    function isMobile() {
+   function isMobile() {
         return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
 
@@ -25,10 +25,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return null;
     }
-
-    connectWalletBtn.addEventListener("click", () => {
-        walletPopup.classList.add("show-popup");
-    });
 
     function closePopup() {
         walletPopup.classList.remove("show-popup");
@@ -61,6 +57,10 @@ document.addEventListener("DOMContentLoaded", function () {
             walletStatus.textContent = "Помилка підключення!";
         }
     }
+
+    // Робимо функцію глобальною
+    window.connectWallet = connectWallet;
+});
 
     async function getTokenBalance(ownerAddress, mintAddress) {
         try {
