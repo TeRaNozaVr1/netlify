@@ -11,9 +11,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 localStorage.setItem("phantomWallet", response.publicKey.toString());
 
                 // Оновлюємо UI
-                walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
-                connectWalletBtn.textContent = "Wallet Connected";
-                connectWalletBtn.disabled = true;
+                updateWalletUI(response.publicKey.toString());
 
                 console.log("✅ Wallet connected:", response.publicKey.toString());
             } catch (err) {
@@ -35,11 +33,26 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Перевірка підключення після оновлення сторінки
+    function updateWalletUI(walletAddress) {
+        walletStatus.textContent = `Connected: ${walletAddress}`;
+        connectWalletBtn.textContent = "Wallet Connected";
+        connectWalletBtn.disabled = true;
+    }
+
     async function checkAutoConnect() {
         const savedWallet = localStorage.getItem("phantomWallet");
+
         if (savedWallet) {
-            await connectWallet(true);
+            updateWalletUI(savedWallet);
+        } else if (window.solana && window.solana.isPhantom) {
+            // Очікуємо подію connect, якщо користувач підключився через deeplink
+            window.solana.on("connect", () => {
+                if (window.solana.publicKey) {
+                    const newWallet = window.solana.publicKey.toString();
+                    localStorage.setItem("phantomWallet", newWallet);
+                    updateWalletUI(newWallet);
+                }
+            });
         }
     }
 
@@ -47,3 +60,4 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     checkAutoConnect();
 });
+
