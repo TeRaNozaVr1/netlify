@@ -73,23 +73,8 @@
     </style>
 </head>
 <body>
-    <div class="widget">
-        <h1>PRESALE</h1>
-        <button id="connectWalletBtn">CONNECT WALLET</button>
-        <p id="walletStatus">Wallet not connected</p>
-        
-        <div class="input-group">
-            <select id="tokenSelect">
-                <option value="USDT">USDT</option>
-                <option value="USDC">USDC</option>
-            </select>
-        </div>
-        
-        <div class="input-group">
-            <input type="number" id="amount" placeholder="Enter amount" />
-        </div>
-        
-        <button id="exchangeBtn">Exchange</button>
+    <button id="connectWalletBtn">Connect Phantom Wallet</button>
+    <p id="walletStatus">Not connected</p>
     </div>
 <script>
            async function connectWallet(autoConnect = false) {
