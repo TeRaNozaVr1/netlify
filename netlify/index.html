@@ -70,6 +70,24 @@
             font-size: 14px;
             margin: 10px 0;
         }
+        .popup {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .popup-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+    }
     </style>
 </head>
 <body>
@@ -84,7 +102,14 @@
                 <option value="USDC">USDC</option>
             </select>
         </div>
-        
+        <div id="walletPopup" class="popup">
+    <div class="popup-content">
+        <p>Оберіть гаманець:</p>
+        <button onclick="connectWallet('phantom')">Phantom</button>
+        <button onclick="connectWallet('solflare')">Solflare</button>
+        <button onclick="closePopup()">Закрити</button>
+    </div>
+</div>
         <div class="input-group">
             <input type="number" id="amount" placeholder="Enter amount" />
         </div>
