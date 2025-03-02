@@ -3,80 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presale Widget</title>
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.1.8/dist/index.iife.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/5.7.1/index.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Anta&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #143021;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            padding: 20px;
-        }
-        .widget {
-            background: #1e2a1f;
-            padding: 20px;
-            border-radius: 20px;
-            text-align: center;
-            width: 100%;
-            max-width: 350px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        h1 {
-            font-family: 'Anta', sans-serif;
-            color: white;
-            font-size: 28px;
-            margin-bottom: 15px;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            background: #98ff38;
-            color: black;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background: #85e732;
-        }
-        .input-group {
-            margin: 10px 0;
-        }
-        input, select {
-            width: 90%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            text-align: center;
-            background: white;
-        }
-        label, p {
-            color: white;
-            font-size: 14px;
-        }
-        #walletStatus {
-            color: white;
-            font-size: 14px;
-            margin: 10px 0;
-        }
-    </style>
+    <title>Phantom Wallet Connect</title>
 </head>
 <body>
     <button id="connectWalletBtn">Connect Phantom Wallet</button>
     <p id="walletStatus">Not connected</p>
-<script>
-           async function connectWallet(autoConnect = false) {
+    
+    <script>
+        async function connectWallet(autoConnect = false) {
             if (window.solana && window.solana.isPhantom) {
                 try {
                     const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
@@ -96,7 +30,7 @@
                 
                 if (/Android|iPhone/i.test(navigator.userAgent)) {
                     const dappUrl = encodeURIComponent(window.location.href);
-                    window.location.href = `https://phantom.app/ul/v1/connect?app_url=${cool-kataifi-90a5d5.netlify.app}&redirect_link=${cool-kataifi-90a5d5.netlify.app}`;
+                    window.location.href = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${dappUrl}`;
                 } else {
                     alert("Phantom Wallet не встановлено. Встанови його за посиланням.");
                     window.open("https://phantom.app/", "_blank");
