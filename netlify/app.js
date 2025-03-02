@@ -18,7 +18,7 @@ const walletInput = document.getElementById("walletAddress");
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
-        const response = await connection.getParsedTokenAccountsByOwner(ownerAddress, { mint: mintAddress });
+        const response = await connection.getParsedTokenAccountsByOwner(new PublicKey(ownerAddress), { mint: mintAddress });
         if (response.value.length > 0) {
             return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
         }
@@ -33,38 +33,39 @@ async function getTokenBalance(ownerAddress, mintAddress) {
 exchangeBtn.addEventListener("click", async () => {
     const amount = parseFloat(amountInput.value);
     const userWalletAddress = walletInput.value.trim();
-
-    if (!userWalletAddress || !PublicKey.isOnCurve(userWalletAddress)) {
-        alert("Будь ласка, введіть коректну адресу Solana гаманця");
+    
+    if (!userWalletAddress) {
+        alert("Будь ласка, введіть адресу Solana-гаманця");
         return;
     }
-
+    
     if (isNaN(amount) || amount <= 0) {
         alert("Будь ласка, введіть коректну кількість USDT/USDC");
         return;
     }
-
-    const userPublicKey = new PublicKey(userWalletAddress);
-    const balanceUSDT = await getTokenBalance(userPublicKey, USDT_MINT_ADDRESS);
-    const balanceUSDC = await getTokenBalance(userPublicKey, USDC_MINT_ADDRESS);
+    
+    const balanceUSDT = await getTokenBalance(userWalletAddress, USDT_MINT_ADDRESS);
+    const balanceUSDC = await getTokenBalance(userWalletAddress, USDC_MINT_ADDRESS);
 
     if (balanceUSDT < amount && balanceUSDC < amount) {
         alert("Недостатньо коштів для обміну!");
         return;
     }
 
-    await exchangeTokens(userPublicKey, amount);
+    await exchangeTokens(userWalletAddress, amount);
 });
 
 // Функція для обміну USDT/USDC
-async function exchangeTokens(userPublicKey, amountInUSDT) {
+async function exchangeTokens(userWalletAddress, amountInUSDT) {
     try {
         const transaction = new Transaction();
-        const hasUSDT = await getTokenBalance(userPublicKey, USDT_MINT_ADDRESS) >= amountInUSDT;
+        const sender = new PublicKey(userWalletAddress);
+        
+        const hasUSDT = await getTokenBalance(sender, USDT_MINT_ADDRESS) >= amountInUSDT;
         const mintAddress = hasUSDT ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
 
         const transferInstruction = SystemProgram.transfer({
-            fromPubkey: userPublicKey,
+            fromPubkey: sender,
             toPubkey: SPL_TOKEN_ADDRESS,
             lamports: amountInUSDT * 1000000000 // Конвертація
         });
@@ -73,11 +74,14 @@ async function exchangeTokens(userPublicKey, amountInUSDT) {
 
         const { blockhash } = await connection.getLatestBlockhash();
         transaction.recentBlockhash = blockhash;
-        transaction.feePayer = userPublicKey;
+        transaction.feePayer = sender;
 
-        console.log("Готова транзакція для підпису:", transaction);
+        // Транзакцію має підписати користувач вручну
+        alert("Зараз згенерується транзакція, підпишіть її у своєму гаманці");
+        console.log("Згенерована транзакція:", transaction);
+
         resultDiv.style.display = "block";
-        resultDiv.textContent = `Транзакція підготовлена, підпишіть та надішліть її вручну.`;
+        resultDiv.textContent = "Транзакція створена! Підпишіть її у своєму гаманці.";
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
