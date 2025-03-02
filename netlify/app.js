@@ -1,20 +1,11 @@
-document.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener("DOMContentLoaded", function () {
     const connectWalletBtn = document.getElementById("connectWalletBtn");
     const walletStatus = document.getElementById("walletStatus");
-    const exchangeBtn = document.getElementById("exchangeBtn");
-    const resultDiv = document.getElementById("result");
-    const amountInput = document.getElementById("amount");
+    const tokenSelect = document.getElementById("tokenSelect");
     const walletPopup = document.getElementById("walletPopup");
+    const amountInput = document.getElementById("amount");
+    const exchangeBtn = document.getElementById("exchangeBtn");
 
-    if (!connectWalletBtn || !walletStatus || !exchangeBtn || !resultDiv || !amountInput || !walletPopup) {
-        console.error("Один або більше елементів DOM не знайдено. Переконайтеся, що HTML-код містить відповідні ID.");
-        return;
-    }
-
-    if (typeof solanaWeb3 === "undefined") {
-        console.error("solanaWeb3 не визначено. Переконайтеся, що бібліотека Solana Web3.js підключена.");
-        return;
-    }
 
     const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
     const endpoint = "https://api.mainnet-beta.solana.com";
