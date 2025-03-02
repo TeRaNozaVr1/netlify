@@ -17,44 +17,49 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-    const getWallet = (walletType) => {
-        if (walletType === "phantom" && window.solana?.isPhantom) {
-            return window.solana;
-        } else if (walletType === "solflare" && window.solflare?.isSolflare) {
-            return window.solflare;
-        }
-        return null;
-    };
+// Функция для определения мобильного устройства
+function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
-    async function connectWallet(walletType, autoConnect = false) {
-        closePopup();
-        let wallet = getWallet(walletType);
+// Определяем доступные кошельки
+const getWallet = (walletType) => {
+    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
+        return window.phantom.solana;
+    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+        return window.solflare;
+    }
+    return null;
+};
 
-        if (!wallet) {
-            alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
-            return;
-        }
+// Открытие и закрытие popup
+connectWalletBtn.addEventListener("click", () => {
+    walletPopup.classList.add("show-popup");
+});
 
-        try {
-            const response = await wallet.connect({ onlyIfTrusted: autoConnect });
-            localStorage.setItem("phantomWallet", response.publicKey.toString());
-            walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
-            connectWalletBtn.textContent = "Wallet Connected";
-            connectWalletBtn.disabled = true;
-            console.log("✅ Wallet connected:", response.publicKey.toString());
-        } catch (err) {
-            console.error("❌ Connection failed:", err);
-            walletStatus.textContent = "Connection failed!";
-            localStorage.removeItem("phantomWallet");
-        }
+function closePopup() {
+    walletPopup.classList.remove("show-popup");
+}
+
+// Подключение кошелька
+function connectWallet(walletType) {
+    closePopup();
+    let wallet = getWallet(walletType);
+    
+    if (!wallet) {
+        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
+        return;
     }
 
-    async function checkAutoConnect() {
-        const savedWallet = localStorage.getItem("phantomWallet");
-        if (savedWallet) {
-            await connectWallet("phantom", true);
-        }
-    }
+    wallet.connect()
+        .then(() => {
+            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+        })
+        .catch(err => {
+            console.error("Помилка підключення:", err);
+        });
+}
+
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
@@ -77,7 +82,7 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    let wallet = getWallet("phantom");
+    let wallet = getWallet("phantom"); // Используем Phantom как дефолт
     if (!wallet || !wallet.publicKey) {
         alert("Будь ласка, підключіть гаманець");
         return;
@@ -106,7 +111,7 @@ async function exchangeTokens(wallet, amountInUSDT) {
         const transferInstruction = SystemProgram.transfer({
             fromPubkey: sender,
             toPubkey: SPL_TOKEN_ADDRESS,
-            lamports: amountInUSDT * 1000000000
+            lamports: amountInUSDT * 1000000000 // Конвертація
         });
 
         transaction.add(transferInstruction);
@@ -184,4 +189,3 @@ async function getSignaturesForAssetV2(assetId) {
         console.error("Помилка отримання історії:", error);
     }
 }
-
