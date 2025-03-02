@@ -17,7 +17,9 @@ const amountInput = document.getElementById("amount");
 const walletInput = document.getElementById("walletAddress");
 const tokenSelect = document.getElementById("tokenSelect");
 
-// Перевірка балансу перед обміном
+// Константа для ціни вашого токена
+const TOKEN_PRICE = 0.00048;  // 1 токен = 0.00048 $
+
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
         const mintPubKey = new PublicKey(mintAddress);
@@ -67,6 +69,9 @@ exchangeBtn.addEventListener("click", async () => {
 // Функція для обміну USDT/USDC на SPL токени
 async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
     try {
+        // Розрахунок кількості токенів, яку отримає користувач
+        const tokensToSend = Math.floor(amountInUSDT / TOKEN_PRICE);  // Кількість токенів, яку отримує користувач
+
         const transaction = new Transaction();
         const sender = new PublicKey(userWalletAddress);
 
@@ -89,7 +94,7 @@ async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
             RECEIVER_WALLET_ADDRESS, // Адреса отримувача
             sender, // Підписант
             [],
-            amountInUSDT * 1000000 // Конвертація до одиниць токенів (за потреби змінити кількість)
+            tokensToSend // Кількість токенів для відправки
         );
 
         transaction.add(transferTokenInstruction);
@@ -102,7 +107,7 @@ async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
         console.log("Згенерована транзакція:", transaction);
 
         resultDiv.style.display = "block";
-        resultDiv.textContent = "Транзакція створена! Підпишіть її у своєму гаманці.";
+        resultDiv.textContent = `Ви отримаєте ${tokensToSend} токенів за ${amountInUSDT} ${selectedToken}. Підпишіть транзакцію у своєму гаманці.`;
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
