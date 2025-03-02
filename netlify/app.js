@@ -27,7 +27,11 @@ async function getTokenBalance(ownerAddress, mintAddress) {
         const response = await connection.getParsedTokenAccountsByOwner(ownerPubKey, { mint: mintPubKey });
 
         if (!response.value || response.value.length === 0) {
-            console.log("Користувач не має акаунта для цього токена.");
+            console.log("Користувач не має акаунта для цього токена. Створюємо акаунт...");
+            // Створення акаунта для токена
+            const token = new Token(connection, mintPubKey, solanaWeb3.TOKEN_PROGRAM_ID, ownerPubKey);
+            const associatedTokenAccount = await token.getOrCreateAssociatedAccountInfo(ownerPubKey);
+            console.log("Створено токен-акаунт:", associatedTokenAccount);
             return 0;
         }
 
