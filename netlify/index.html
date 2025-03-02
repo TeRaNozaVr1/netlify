@@ -71,21 +71,39 @@
             margin: 10px 0;
         }
         .popup {
-            display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
-        }
-        .popup-content {
-            background: white;
+            bottom: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 350px;
+            background: #1e2a1f;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             text-align: center;
+            transition: bottom 0.3s ease-in-out;
+        }
+        .popup p {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .popup button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        .popup .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+        .show-popup {
+            bottom: 20px;
         }
     </style>
 </head>
@@ -102,20 +120,18 @@
             </select>
         </div>
         
-        <div id="walletPopup" class="popup">
-            <div class="popup-content">
-                <p>Оберіть гаманець:</p>
-                <button onclick="connectWallet('phantom')">Phantom</button>
-                <button onclick="connectWallet('solflare')">Solflare</button>
-                <button onclick="closePopup()">Закрити</button>
-            </div>
-        </div>
-
         <div class="input-group">
             <input type="number" id="amount" placeholder="Enter amount" />
         </div>
         
         <button id="exchangeBtn">Exchange</button>
+    </div>
+    
+    <div class="popup" id="walletPopup">
+        <span class="close-btn" onclick="closePopup()">&times;</span>
+        <p>Select Wallet:</p>
+        <button onclick="connectWallet('phantom')">Phantom</button>
+        <button onclick="connectWallet('solflare')">Solflare</button>
     </div>
 
     <script src="app.js"></script>
