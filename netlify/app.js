@@ -1,4 +1,4 @@
-const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
+const connection = new solanaWeb3.Connection(endpoint, "confirmed");
 
 // Solana RPC
 const endpoint = "https://mainnet.helius-rpc.com/?api-key=62d6c036-5371-452d-b852-3d6f6823e08f";
