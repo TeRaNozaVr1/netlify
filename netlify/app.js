@@ -18,11 +18,18 @@ const walletInput = document.getElementById("walletAddress");
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
-        const response = await connection.getParsedTokenAccountsByOwner(new PublicKey(ownerAddress), { mint: mintAddress });
-        if (response.value.length > 0) {
-            return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
+        // Перевірка коректності PublicKey
+        const mintPubKey = new PublicKey(mintAddress);
+        const ownerPubKey = new PublicKey(ownerAddress);
+
+        const response = await connection.getParsedTokenAccountsByOwner(ownerPubKey, { mint: mintPubKey });
+
+        if (!response.value || response.value.length === 0) {
+            console.log("Користувач не має акаунта для цього токена.");
+            return 0;
         }
-        return 0;
+
+        return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
     } catch (error) {
         console.error("Помилка отримання балансу:", error);
         return 0;
