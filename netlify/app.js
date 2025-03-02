@@ -1,23 +1,11 @@
 document.addEventListener("DOMContentLoaded", async function () {
     const connectWalletBtn = document.getElementById("connectWalletBtn");
     const walletStatus = document.getElementById("walletStatus");
-    const exchangeBtn = document.getElementById("exchangeBtn");
-    const resultDiv = document.getElementById("result");
-    const amountInput = document.getElementById("amount");
-    const walletPopup = document.getElementById("walletPopup");
 
-    const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
-    const endpoint = "https://api.mainnet-beta.solana.com";
-    const connection = new Connection(endpoint, "confirmed");
-
-    const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
-    const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
-    const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
-
-    async function connectWallet(autoConnect = false) {
+    async function connectWallet() {
         if (window.solana && window.solana.isPhantom) {
             try {
-                const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
+                const response = await window.solana.connect();
                 localStorage.setItem("phantomWallet", response.publicKey.toString());
                 walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
                 connectWalletBtn.textContent = "Wallet Connected";
@@ -40,73 +28,129 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    async function checkAutoConnect() {
-        const savedWallet = localStorage.getItem("phantomWallet");
-        if (savedWallet) {
-            await connectWallet(true);
+    connectWalletBtn.addEventListener("click", () => connectWallet());
+});
+
+const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
+const endpoint = "https://api.mainnet-beta.solana.com";
+const connection = new Connection(endpoint, "confirmed");
+const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
+const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
+const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
+const connectWalletBtn = document.getElementById("connectWalletBtn");
+const walletStatus = document.getElementById("walletStatus");
+const exchangeBtn = document.getElementById("exchangeBtn");
+const resultDiv = document.getElementById("result");
+const amountInput = document.getElementById("amount");
+const walletPopup = document.getElementById("walletPopup");
+
+function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+const getWallet = (walletType) => {
+    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
+        return window.phantom.solana;
+    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+        return window.solflare;
+    }
+    return null;
+};
+
+connectWalletBtn.addEventListener("click", () => {
+    walletPopup.classList.add("show-popup");
+});
+
+function closePopup() {
+    walletPopup.classList.remove("show-popup");
+}
+
+function connectWallet(walletType) {
+    closePopup();
+    let wallet = getWallet(walletType);
+    
+    if (!wallet) {
+        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
+        return;
+    }
+
+    wallet.connect()
+        .then(() => {
+            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+        })
+        .catch(err => {
+            console.error("Помилка підключення:", err);
+        });
+}
+
+async function getTokenBalance(ownerAddress, mintAddress) {
+    try {
+        const response = await connection.getParsedTokenAccountsByOwner(ownerAddress, { mint: mintAddress });
+        if (response.value.length > 0) {
+            return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
         }
+        return 0;
+    } catch (error) {
+        console.error("Помилка отримання балансу:", error);
+        return 0;
+    }
+}
+
+exchangeBtn.addEventListener("click", async () => {
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+        alert("Будь ласка, введіть коректну кількість USDT/USDC");
+        return;
     }
 
-    function isMobile() {
-        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    let wallet = getWallet("phantom");
+    if (!wallet || !wallet.publicKey) {
+        alert("Будь ласка, підключіть гаманець");
+        return;
     }
 
-    const getWallet = (walletType) => {
-        if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
-            return window.phantom.solana;
-        } else if (walletType === "solflare" && window.solflare?.isSolflare) {
-            return window.solflare;
-        }
-        return null;
-    };
+    const balanceUSDT = await getTokenBalance(wallet.publicKey, USDT_MINT_ADDRESS);
+    const balanceUSDC = await getTokenBalance(wallet.publicKey, USDC_MINT_ADDRESS);
 
-    function closePopup() {
-        walletPopup.classList.remove("show-popup");
+    if (balanceUSDT < amount && balanceUSDC < amount) {
+        alert("Недостатньо коштів для обміну!");
+        return;
     }
 
-    async function getTokenBalance(ownerAddress, mintAddress) {
-        try {
-            const response = await connection.getParsedTokenAccountsByOwner(ownerAddress, { mint: mintAddress });
-            if (response.value.length > 0) {
-                return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
-            }
-            return 0;
-        } catch (error) {
-            console.error("Помилка отримання балансу:", error);
-            return 0;
-        }
+    await exchangeTokens(wallet, amount);
+});
+
+async function exchangeTokens(wallet, amountInUSDT) {
+    try {
+        const transaction = new Transaction();
+        const sender = wallet.publicKey;
+        const hasUSDT = await getTokenBalance(sender, USDT_MINT_ADDRESS) >= amountInUSDT;
+        const mintAddress = hasUSDT ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
+
+        const transferInstruction = SystemProgram.transfer({
+            fromPubkey: sender,
+            toPubkey: SPL_TOKEN_ADDRESS,
+            lamports: amountInUSDT * 1000000000
+        });
+
+        transaction.add(transferInstruction);
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = sender;
+        const signedTransaction = await wallet.signTransaction(transaction);
+        const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
+
+        await connection.confirmTransaction(txid);
+        console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
+        resultDiv.style.display = "block";
+        resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
+    } catch (err) {
+        console.error("Помилка обміну:", err);
+        resultDiv.style.display = "block";
+        resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
     }
+}
 
-    async function exchangeTokens(wallet, amountInUSDT) {
-        try {
-            const transaction = new Transaction();
-            const sender = wallet.publicKey;
-            const hasUSDT = await getTokenBalance(sender, USDT_MINT_ADDRESS) >= amountInUSDT;
-            const mintAddress = hasUSDT ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
-
-            const transferInstruction = SystemProgram.transfer({
-                fromPubkey: sender,
-                toPubkey: SPL_TOKEN_ADDRESS,
-                lamports: amountInUSDT * 1000000000
-            });
-
-            transaction.add(transferInstruction);
-            const { blockhash } = await connection.getLatestBlockhash();
-            transaction.recentBlockhash = blockhash;
-            transaction.feePayer = sender;
-
-            const signedTransaction = await wallet.signTransaction(transaction);
-            const txid = await connection.sendRawTransaction(signedTransaction.serialize(), { skipPreflight: false, preflightCommitment: "confirmed" });
-            await connection.confirmTransaction(txid);
-            console.log(`Транзакція успішно надіслана! TXID: ${txid}`);
-            resultDiv.style.display = "block";
-            resultDiv.textContent = `Обмін завершено! TXID: ${txid}`;
-        } catch (err) {
-            console.error("Помилка обміну:", err);
-            resultDiv.style.display = "block";
-            resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
-        }
-    }
 
     async function getAssetsByOwner(ownerAddress) {
         const body = {
