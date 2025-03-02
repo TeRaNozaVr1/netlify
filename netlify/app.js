@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const walletAddress = response.publicKey.toString();
 
         localStorage.setItem("phantomWallet", walletAddress);
-        walletStatus.textContent = `Connected: ${walletAddress}`;
+        walletStatus.textContent = Connected: ${walletAddress};
         connectWalletBtn.textContent = "Wallet Connected";
         connectWalletBtn.disabled = true;
 
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     } else {
       console.log("Phantom не знайдено. Відкриваємо додаток...");
       if (/Android|iPhone/i.test(navigator.userAgent)) {
-        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+        const deeplink = https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)};
         window.location.href = deeplink;
       } else {
         alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   async function confirmWalletAddress(walletAddress) {
     try {
-      const response = await fetch('https://cool-kataifi-90a5d5.netlify.app', {
+      const response = await fetch('https://cool-kataifi-90a5d5.netlify.app/confirm-wallet', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(HTTP error! Status: ${response.status});
       }
 
       const text = await response.text(); // Читаємо текстовий контент
