@@ -70,6 +70,41 @@
             font-size: 14px;
             margin: 10px 0;
         }
+        .popup {
+            position: fixed;
+            bottom: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 350px;
+            background: #1e2a1f;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            transition: bottom 0.3s ease-in-out;
+        }
+        .popup p {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .popup button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        .popup .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+        .show-popup {
+            bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -90,6 +125,13 @@
         </div>
         
         <button id="exchangeBtn">Exchange</button>
+    </div>
+    
+    <div class="popup" id="walletPopup">
+        <span class="close-btn" onclick="closePopup()">&times;</span>
+        <p>Select Wallet:</p>
+        <button onclick="connectWallet('phantom')">Phantom</button>
+        <button onclick="connectWallet('solflare')">Solflare</button>
     </div>
 
     <script src="app.js"></script>
