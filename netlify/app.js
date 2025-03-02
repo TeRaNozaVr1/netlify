@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const walletAddress = response.publicKey.toString();
 
         localStorage.setItem("phantomWallet", walletAddress);
-        walletStatus.textContent = Connected: ${walletAddress};
+        walletStatus.textContent = `Connected: ${walletAddress}`;
         connectWalletBtn.textContent = "Wallet Connected";
         connectWalletBtn.disabled = true;
 
