@@ -92,6 +92,42 @@
         <button id="exchangeBtn">Exchange</button>
     </div>
 
-    <script src="app.js"></script>
+           async function connectWallet(autoConnect = false) {
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
+                    localStorage.setItem("phantomWallet", response.publicKey.toString());
+                    
+                    document.getElementById("walletStatus").textContent = `Connected: ${response.publicKey.toString()}`;
+                    document.getElementById("connectWalletBtn").textContent = "Wallet Connected";
+                    document.getElementById("connectWalletBtn").disabled = true;
+
+                    console.log("✅ Wallet connected:", response.publicKey.toString());
+                } catch (err) {
+                    console.error("❌ Connection failed:", err);
+                    localStorage.removeItem("phantomWallet");
+                }
+            } else {
+                console.log("⚠️ Phantom не знайдено. Використовуємо deeplink...");
+                
+                if (/Android|iPhone/i.test(navigator.userAgent)) {
+                    const dappUrl = encodeURIComponent(window.location.href);
+                    window.location.href = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${dappUrl}`;
+                } else {
+                    alert("Phantom Wallet не встановлено. Встанови його за посиланням.");
+                    window.open("https://phantom.app/", "_blank");
+                }
+            }
+        }
+        
+        async function checkAutoConnect() {
+            const savedWallet = localStorage.getItem("phantomWallet");
+            if (savedWallet) {
+                await connectWallet(true);
+            }
+        }
+
+        document.getElementById("connectWalletBtn").addEventListener("click", () => connectWallet(false));
+        checkAutoConnect();
 </body>
 </html>
