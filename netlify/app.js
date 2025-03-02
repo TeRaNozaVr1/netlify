@@ -38,4 +38,38 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   connectWalletBtn.addEventListener("click", () => connectWallet(false));
   checkAutoConnect();
+  async function getWalletAddress() {
+  const savedWallet = localStorage.getItem("phantomWallet");
+  if (savedWallet) {
+    return savedWallet;
+  } else {
+    return null;
+  }
+}
+
+async function confirmWalletAddress() {
+  const walletAddress = await getWalletAddress();
+  if (walletAddress) {
+    // Call your API or backend to confirm the wallet address
+    const response = await fetch('/api/confirm-wallet-address', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ walletAddress: walletAddress })
+    });
+    const data = await response.json();
+    if (data.success) {
+      console.log('Wallet address confirmed');
+    } else {
+      console.error('Error confirming wallet address:', data.error);
+    }
+  }
+}
+
+// Call confirmWalletAddress when the wallet is connected
+connectWalletBtn.addEventListener("click", async () => {
+  await connectWallet(false);
+  await confirmWalletAddress();
+});
 });
