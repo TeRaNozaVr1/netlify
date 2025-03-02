@@ -72,4 +72,3 @@ connectWalletBtn.addEventListener("click", async () => {
   await connectWallet(false);
   await confirmWalletAddress();
 });
-});
