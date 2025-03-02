@@ -22,16 +22,6 @@ function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Функція визначення гаманця
-const getWallet = (walletType) => {
-    if (walletType === "phantom" && window.solana?.isPhantom) {
-        return window.solana;
-    } else if (walletType === "solflare" && window.solflare?.isSolflare) {
-        return window.solflare;
-    }
-    return null;
-};
-
 // Відкриття та закриття popup
 connectWalletBtn.addEventListener("click", () => {
     walletPopup.classList.add("show-popup");
@@ -44,6 +34,16 @@ function closePopup() {
 // Функція підключення гаманця
 async function connectWallet(walletType) {
     closePopup();
+    
+    const getWallet = (walletType) => {
+        if (walletType === "phantom" && window.solana?.isPhantom) {
+            return window.solana;
+        } else if (walletType === "solflare" && window.solflare?.isSolflare) {
+            return window.solflare;
+        }
+        return null;
+    };
+
     let wallet = getWallet(walletType);
 
     if (!wallet) {
@@ -58,6 +58,7 @@ async function connectWallet(walletType) {
         console.error("Помилка підключення:", err);
     }
 }
+
 
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
