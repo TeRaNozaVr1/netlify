@@ -18,23 +18,35 @@ const walletInput = document.getElementById("walletAddress");
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
-        // Перевірка коректності PublicKey
-        const mintPubKey = new PublicKey(mintAddress);
         const ownerPubKey = new PublicKey(ownerAddress);
+        const mintPubKey = new PublicKey(mintAddress);
 
-        const response = await connection.getParsedTokenAccountsByOwner(ownerPubKey, { mint: mintPubKey });
+        const response = await connection.getParsedTokenAccountsByOwner(ownerPubKey, {
+            programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+        });
 
         if (!response.value || response.value.length === 0) {
-            console.log("Користувач не має акаунта для цього токена.");
+            console.log("Користувач не має токен-акаунтів.");
             return 0;
         }
 
-        return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
+        // Знайти потрібний токен-акаунт
+        const tokenAccount = response.value.find(
+            (acc) => acc.account.data.parsed.info.mint === mintPubKey.toBase58()
+        );
+
+        if (!tokenAccount) {
+            console.log("Токен-акаунт не знайдено.");
+            return 0;
+        }
+
+        return parseFloat(tokenAccount.account.data.parsed.info.tokenAmount.uiAmount);
     } catch (error) {
         console.error("Помилка отримання балансу:", error);
         return 0;
     }
 }
+
 
 // Обмін токенів
 exchangeBtn.addEventListener("click", async () => {
