@@ -1,39 +1,76 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Обмін USDT/USDC</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.30.2/solanaWeb3.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <title>Token Exchange</title>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #143021;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+        .widget {
+            background: #1e2a1f;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        input {
+            width: 90%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #98ff38;
+            color: black;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #85e732;
+        }
+        #result {
+            color: white;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Обмін USDT/USDC на SPL токени</h1>
-        
-        <button id="connectWalletBtn">Підключити гаманець</button>
-        <p id="walletStatus">Гаманець не підключено</p>
-        
-        <div id="walletPopup" class="popup">
-            <div class="popup-content">
-                <h2>Оберіть гаманець</h2>
-                <button onclick="connectWallet('phantom')">Phantom</button>
-                <button onclick="connectWallet('solflare')">Solflare</button>
-                <button onclick="closePopup()">Закрити</button>
-            </div>
-        </div>
-        
-        <label for="walletAddress">Введіть адресу вашого гаманця:</label>
-        <input type="text" id="walletAddress" placeholder="Ваш Solana-адрес">
-
-        <label for="amount">Введіть суму USDT/USDC:</label>
-        <input type="number" id="amount" placeholder="Сума">
-        
-        <button id="exchangeBtn">Обміняти</button>
-        
-        <div id="result" style="display: none;"></div>
+    <div class="widget">
+        <h1>Token Exchange</h1>
+        <input type="text" id="walletAddress" placeholder="Enter Solana Wallet Address" />
+        <input type="number" id="amount" placeholder="Enter Amount" />
+        <button id="exchangeBtn">Exchange</button>
+        <p id="result"></p>
     </div>
     
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
