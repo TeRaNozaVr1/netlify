@@ -6,6 +6,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     const amountInput = document.getElementById("amount");
     const walletPopup = document.getElementById("walletPopup");
 
+    if (!connectWalletBtn || !walletStatus || !exchangeBtn || !resultDiv || !amountInput || !walletPopup) {
+        console.error("Один або більше елементів DOM не знайдено. Переконайтеся, що HTML-код містить відповідні ID.");
+        return;
+    }
+
+    if (typeof solanaWeb3 === "undefined") {
+        console.error("solanaWeb3 не визначено. Переконайтеся, що бібліотека Solana Web3.js підключена.");
+        return;
+    }
+
     const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
     const endpoint = "https://api.mainnet-beta.solana.com";
     const connection = new Connection(endpoint, "confirmed");
@@ -14,18 +24,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
     const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
-    function isMobile() {
-        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    }
-
-    const getWallet = (walletType) => {
+    function getWallet(walletType) {
         if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
             return window.phantom.solana;
         } else if (walletType === "solflare" && window.solflare?.isSolflare) {
             return window.solflare;
         }
         return null;
-    };
+    }
 
     connectWalletBtn.addEventListener("click", () => {
         walletPopup.classList.add("show-popup");
@@ -55,10 +61,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     async function getTokenBalance(ownerAddress, mintAddress) {
         try {
             const response = await connection.getParsedTokenAccountsByOwner(ownerAddress, { mint: mintAddress });
-            if (response.value.length > 0) {
-                return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
-            }
-            return 0;
+            return response.value.length > 0 ? parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount) : 0;
         } catch (error) {
             console.error("Помилка отримання балансу:", error);
             return 0;
@@ -93,14 +96,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
             const transaction = new Transaction();
             const sender = wallet.publicKey;
-
             const hasUSDT = await getTokenBalance(sender, USDT_MINT_ADDRESS) >= amountInUSDT;
             const mintAddress = hasUSDT ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
 
             const transferInstruction = SystemProgram.transfer({
                 fromPubkey: sender,
                 toPubkey: SPL_TOKEN_ADDRESS,
-                lamports: amountInUSDT * 1000000000
+                lamports: amountInUSDT * 1_000_000_000
             });
 
             transaction.add(transferInstruction);
