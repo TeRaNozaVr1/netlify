@@ -7,22 +7,26 @@ document.addEventListener("DOMContentLoaded", async function () {
             try {
                 const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
 
-                if (response.publicKey) {
-                    const walletAddress = response.publicKey.toString();
-                    localStorage.setItem("phantomWallet", walletAddress);
-                    updateWalletUI(walletAddress);
-                    console.log("✅ Wallet connected:", walletAddress);
-                }
+                // Зберігаємо адресу гаманця
+                localStorage.setItem("phantomWallet", response.publicKey.toString());
+
+                // Оновлюємо UI
+                walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
+                connectWalletBtn.textContent = "Wallet Connected";
+                connectWalletBtn.disabled = true;
+
+                console.log("✅ Wallet connected:", response.publicKey.toString());
             } catch (err) {
                 console.error("❌ Connection failed:", err);
                 walletStatus.textContent = "Connection failed!";
-                localStorage.removeItem("phantomWallet"); 
+                localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
             }
         } else {
-            console.log("⚠️ Phantom не знайдено. Використовуємо мобільний deeplink...");
+            console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
 
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&redirect_link=${encodeURIComponent(window.location.href)}`;
+                // ✅ Правильний deeplink, що гарантує запит дозволу!
+                const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
                 window.location.href = deeplink;
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
@@ -31,41 +35,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    function updateWalletUI(walletAddress) {
-        walletStatus.textContent = `Connected: ${walletAddress}`;
-        connectWalletBtn.textContent = "Wallet Connected";
-        connectWalletBtn.disabled = true;
-    }
-
+    // Перевірка підключення після оновлення сторінки
     async function checkAutoConnect() {
-        if (window.solana && window.solana.isPhantom) {
-            window.solana.on("connect", () => {
-                if (window.solana.publicKey) {
-                    const walletAddress = window.solana.publicKey.toString();
-                    localStorage.setItem("phantomWallet", walletAddress);
-                    updateWalletUI(walletAddress);
-                }
-            });
-
-            try {
-                const response = await window.solana.connect({ onlyIfTrusted: true });
-                if (response.publicKey) {
-                    const walletAddress = response.publicKey.toString();
-                    localStorage.setItem("phantomWallet", walletAddress);
-                    updateWalletUI(walletAddress);
-                }
-            } catch (err) {
-                console.log("🔄 Автопідключення не вдалося, очікуємо дію користувача.");
-            }
-        }
-
         const savedWallet = localStorage.getItem("phantomWallet");
         if (savedWallet) {
-            updateWalletUI(savedWallet);
+            await connectWallet(true);
         }
     }
 
     connectWalletBtn.addEventListener("click", () => connectWallet(false));
+
+    checkAutoConnect();
+});
+
 
     checkAutoConnect();
 });
