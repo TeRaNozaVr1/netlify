@@ -1,4 +1,4 @@
-ocument.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener("DOMContentLoaded", async function () {
     const connectWalletBtn = document.getElementById("connectWalletBtn");
     const walletStatus = document.getElementById("walletStatus");
     const exchangeBtn = document.getElementById("exchangeBtn");
