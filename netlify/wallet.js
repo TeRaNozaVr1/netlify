@@ -22,10 +22,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                 localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
             }
         } else {
-            console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
+            console.log("⚠️ Phantom не знайдено. Використовуємо мобільний deeplink...");
 
             if (/Android|iPhone/i.test(navigator.userAgent)) {
-                // ✅ Правильний deeplink, що гарантує запит дозволу!
+                // ✅ Deeplink для відкриття Phantom через мобільний браузер
                 const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
                 window.location.href = deeplink;
             } else {
