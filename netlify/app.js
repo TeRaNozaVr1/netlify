@@ -17,24 +17,6 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-// Функція для перевірки мобільного пристрою
-function isMobile() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-// Відкриття та закриття popup
-connectWalletBtn.addEventListener("click", () => {
-    walletPopup.classList.add("show-popup");
-});
-
-function closePopup() {
-    walletPopup.classList.remove("show-popup");
-}
-
-// Функція підключення гаманця
-async function connectWallet(walletType) {
-    closePopup();
-    
     const getWallet = (walletType) => {
         if (walletType === "phantom" && window.solana?.isPhantom) {
             return window.solana;
@@ -44,20 +26,40 @@ async function connectWallet(walletType) {
         return null;
     };
 
-    let wallet = getWallet(walletType);
+    async function connectWallet(walletType, autoConnect = false) {
+        closePopup();
+        let wallet = getWallet(walletType);
 
-    if (!wallet) {
-        alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
-        return;
+        if (!wallet) {
+            alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
+            return;
+        }
+
+        try {
+            const response = await wallet.connect({ onlyIfTrusted: autoConnect });
+            localStorage.setItem("phantomWallet", response.publicKey.toString());
+            walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
+            connectWalletBtn.textContent = "Wallet Connected";
+            connectWalletBtn.disabled = true;
+            console.log("✅ Wallet connected:", response.publicKey.toString());
+        } catch (err) {
+            console.error("❌ Connection failed:", err);
+            walletStatus.textContent = "Connection failed!";
+            localStorage.removeItem("phantomWallet");
+        }
     }
 
-    try {
-        await wallet.connect();
-        walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-    } catch (err) {
-        console.error("Помилка підключення:", err);
+    async function checkAutoConnect() {
+        const savedWallet = localStorage.getItem("phantomWallet");
+        if (savedWallet) {
+            await connectWallet("phantom", true);
+        }
     }
-}
+
+    connectWalletBtn.addEventListener("click", () => connectWallet("phantom", false));
+    checkAutoConnect();
+});
+
 
 
 // Перевірка балансу перед обміном
