@@ -19,8 +19,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     } else {
       console.log("Phantom не знайдено. Відкриваємо додаток...");
       if (/Android|iPhone/i.test(navigator.userAgent)) {
-        // Правильний deeplink для мобільних додатків
-        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
+        // Правильний deeplink, що гарантує запит дозволу!
+        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}&public_key=${encodeURIComponent(response.publicKey.toString())}`;
         window.location.href = deeplink;
       } else {
         alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
