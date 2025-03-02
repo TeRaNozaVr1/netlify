@@ -7,10 +7,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             try {
                 const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
 
-                // Зберігаємо адресу гаманця
                 localStorage.setItem("phantomWallet", response.publicKey.toString());
 
-                // Оновлюємо UI
                 walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
                 connectWalletBtn.textContent = "Wallet Connected";
                 connectWalletBtn.disabled = true;
@@ -19,14 +17,21 @@ document.addEventListener("DOMContentLoaded", async function () {
             } catch (err) {
                 console.error("❌ Connection failed:", err);
                 walletStatus.textContent = "Connection failed!";
-                localStorage.removeItem("phantomWallet"); // Очищуємо у разі помилки
+                localStorage.removeItem("phantomWallet");
             }
         } else {
             console.log("⚠️ Phantom не знайдено. Відкриваємо додаток...");
 
             if (/Android|iPhone/i.test(navigator.userAgent)) {
                 const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodeURIComponent(window.location.href)}`;
-                window.location.href = deeplink;
+
+                // Перевіряємо браузер
+                if (navigator.userAgent.includes("SamsungBrowser")) {
+                    // Якщо Samsung Internet, перенаправляємо в Play Store
+                    window.location.href = "https://play.google.com/store/apps/details?id=app.phantom";
+                } else {
+                    window.location.href = deeplink;
+                }
             } else {
                 alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
                 window.open("https://phantom.app/", "_blank");
@@ -34,7 +39,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Функція перевірки LocalStorage після редиректу
     function checkWalletAfterRedirect() {
         const savedWallet = localStorage.getItem("phantomWallet");
         if (savedWallet) {
@@ -47,6 +51,5 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     connectWalletBtn.addEventListener("click", () => connectWallet(false));
 
-    // Виконуємо перевірку після перезавантаження або редиректу
     checkWalletAfterRedirect();
 });
