@@ -7,19 +7,19 @@ document.addEventListener("DOMContentLoaded", async function () {
       try {
         const response = await window.solana.connect({ onlyIfTrusted: autoConnect });
         const walletAddress = response.publicKey.toString();
-        
+
         localStorage.setItem("phantomWallet", walletAddress);
         walletStatus.textContent = `Connected: ${walletAddress}`;
         connectWalletBtn.textContent = "Wallet Connected";
         connectWalletBtn.disabled = true;
-        
+
         console.log("Wallet connected:", walletAddress);
-        await confirmWalletAddress(walletAddress); // Викликаємо підтвердження адреси після підключення
+        await confirmWalletAddress(walletAddress); // Підтвердження адреси
 
       } catch (err) {
         console.error("Connection failed:", err);
         walletStatus.textContent = "Connection failed!";
-        localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
+        localStorage.removeItem("phantomWallet"); // Очищаємо дані у разі помилки
       }
     } else {
       console.log("Phantom не знайдено. Відкриваємо додаток...");
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   async function confirmWalletAddress(walletAddress) {
     try {
-      const response = await fetch('/api/confirm-wallet-address', {
+      const response = await fetch('https://cool-kataifi-90a5d5.netlify.app', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -58,7 +58,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         body: JSON.stringify({ walletAddress })
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const text = await response.text(); // Читаємо текстовий контент
+      if (!text) throw new Error("Empty response from server");
+
+      const data = JSON.parse(text); // Парсимо JSON
       if (data.success) {
         console.log('Wallet address confirmed');
       } else {
