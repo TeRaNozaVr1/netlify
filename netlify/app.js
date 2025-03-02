@@ -5,8 +5,8 @@ const endpoint = "https://mainnet.helius-rpc.com/?api-key=62d6c036-5371-452d-b85
 const connection = new Connection(endpoint, "confirmed");
 
 // Адреси токенів
-const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
-const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
+const USDT_MINT_ADDRESS = new PublicKey("Es9vMFr8Hg9NQ29gHks4vWZ3VpH5p89H5VzwgrGzF8jz");  // Заміна на правильну адресу USDT
+const USDC_MINT_ADDRESS = new PublicKey("Es9vMFr8Hg9NQ29gHks4vWZ3VpH5p89H5VzwgrGzF8jz");  // Заміна на правильну адресу USDC
 const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
 // UI Елементи
@@ -14,7 +14,7 @@ const exchangeBtn = document.getElementById("exchangeBtn");
 const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletInput = document.getElementById("walletAddress");
-const tokenSelect = document.getElementById("tokenSelect"); // Додаємо вибір токена
+const tokenSelect = document.getElementById("tokenSelect");
 
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
@@ -39,7 +39,7 @@ async function getTokenBalance(ownerAddress, mintAddress) {
 exchangeBtn.addEventListener("click", async () => {
     const amount = parseFloat(amountInput.value);
     const userWalletAddress = walletInput.value.trim();
-    const selectedToken = tokenSelect.value; // Отримуємо вибір користувача
+    const selectedToken = tokenSelect.value;
 
     if (!userWalletAddress) {
         alert("Будь ласка, введіть адресу Solana-гаманця");
@@ -51,7 +51,7 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    // Вибираємо токен за вибором користувача
+    // Вибір токена для обміну
     const mintAddress = selectedToken === "USDT" ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
     const balance = await getTokenBalance(userWalletAddress, mintAddress);
 
@@ -72,7 +72,7 @@ async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
         const transferInstruction = SystemProgram.transfer({
             fromPubkey: sender,
             toPubkey: SPL_TOKEN_ADDRESS,
-            lamports: amountInUSDT * 1000000000 // Конвертація
+            lamports: amountInUSDT * 1000000000
         });
 
         transaction.add(transferInstruction);
@@ -92,3 +92,4 @@ async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
         resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
     }
 }
+
