@@ -149,7 +149,7 @@ async function exchangeTokens(wallet, amountInUSDT) {
         resultDiv.style.display = "block";
         resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
     }
-
+}
 
     async function getAssetsByOwner(ownerAddress) {
         const body = {
