@@ -5,8 +5,8 @@ const endpoint = "https://mainnet.helius-rpc.com/?api-key=62d6c036-5371-452d-b85
 const connection = new Connection(endpoint, "confirmed");
 
 // Адреси токенів
-const USDT_MINT_ADDRESS = new PublicKey("Es9vMFr8Hg9NQ29gHks4vWZ3VpH5p89H5VzwgrGzF8jz");  // Заміна на правильну адресу USDT
-const USDC_MINT_ADDRESS = new PublicKey("Es9vMFr8Hg9NQ29gHks4vWZ3VpH5p89H5VzwgrGzF8jz");  // Заміна на правильну адресу USDC
+const USDT_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");  // Заміна на правильну адресу USDT
+const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");  // Заміна на правильну адресу USDC
 const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
 // UI Елементи
