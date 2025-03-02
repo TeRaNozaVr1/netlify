@@ -91,7 +91,7 @@
         
         <button id="exchangeBtn">Exchange</button>
     </div>
-
+<script>
            async function connectWallet(autoConnect = false) {
             if (window.solana && window.solana.isPhantom) {
                 try {
@@ -129,5 +129,6 @@
 
         document.getElementById("connectWalletBtn").addEventListener("click", () => connectWallet(false));
         checkAutoConnect();
+    </script>
 </body>
 </html>
