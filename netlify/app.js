@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
 
       if (!response.ok) {
-        throw new Error(HTTP error! Status: ${response.status});
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const text = await response.text(); // Читаємо текстовий контент
