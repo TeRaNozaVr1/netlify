@@ -204,21 +204,3 @@ async function exchangeTokens(wallet, amountInUSDT) {
             console.error("Помилка отримання історії:", error);
         }
     }
-
-    connectWalletBtn.addEventListener("click", () => connectWallet(false));
-    exchangeBtn.addEventListener("click", async () => {
-        const amount = parseFloat(amountInput.value);
-        if (!amount || amount <= 0) {
-            alert("Введіть коректну кількість USDT/USDC");
-            return;
-        }
-        let wallet = getWallet("phantom");
-        if (!wallet || !wallet.publicKey) {
-            alert("Підключіть гаманець");
-            return;
-        }
-        await exchangeTokens(wallet, amount);
-    });
-
-    checkAutoConnect();
-});
