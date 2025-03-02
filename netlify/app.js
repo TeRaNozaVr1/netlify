@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const USDC_MINT_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU");
     const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo");
 
-   function isMobile() {
+    function isMobile() {
         return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
 
@@ -60,7 +60,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Робимо функцію глобальною
     window.connectWallet = connectWallet;
-});
 
     async function getTokenBalance(ownerAddress, mintAddress) {
         try {
@@ -127,6 +126,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 });
+
 
 
     async function getAssetsByOwner(ownerAddress) {
