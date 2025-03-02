@@ -17,22 +17,22 @@ const resultDiv = document.getElementById("result");
 const amountInput = document.getElementById("amount");
 const walletPopup = document.getElementById("walletPopup");
 
-// Функция для определения мобильного устройства
+// Функція для перевірки мобільного пристрою
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Определяем доступные кошельки
+// Функція визначення гаманця
 const getWallet = (walletType) => {
-    if (walletType === "phantom" && window.phantom?.solana?.isPhantom) {
-        return window.phantom.solana;
+    if (walletType === "phantom" && window.solana?.isPhantom) {
+        return window.solana;
     } else if (walletType === "solflare" && window.solflare?.isSolflare) {
         return window.solflare;
     }
     return null;
 };
 
-// Открытие и закрытие popup
+// Відкриття та закриття popup
 connectWalletBtn.addEventListener("click", () => {
     walletPopup.classList.add("show-popup");
 });
@@ -41,23 +41,22 @@ function closePopup() {
     walletPopup.classList.remove("show-popup");
 }
 
-// Подключение кошелька
-function connectWallet(walletType) {
+// Функція підключення гаманця
+async function connectWallet(walletType) {
     closePopup();
     let wallet = getWallet(walletType);
-    
+
     if (!wallet) {
         alert("Будь ласка, встановіть " + (walletType === "phantom" ? "Phantom Wallet" : "Solflare"));
         return;
     }
 
-    wallet.connect()
-        .then(() => {
-            walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
-        })
-        .catch(err => {
-            console.error("Помилка підключення:", err);
-        });
+    try {
+        await wallet.connect();
+        walletStatus.textContent = `Гаманець підключено: ${wallet.publicKey.toString()}`;
+    } catch (err) {
+        console.error("Помилка підключення:", err);
+    }
 }
 
 // Перевірка балансу перед обміном
@@ -82,7 +81,7 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    let wallet = getWallet("phantom"); // Используем Phantom как дефолт
+    let wallet = getWallet("phantom");
     if (!wallet || !wallet.publicKey) {
         alert("Будь ласка, підключіть гаманець");
         return;
@@ -111,7 +110,7 @@ async function exchangeTokens(wallet, amountInUSDT) {
         const transferInstruction = SystemProgram.transfer({
             fromPubkey: sender,
             toPubkey: SPL_TOKEN_ADDRESS,
-            lamports: amountInUSDT * 1000000000 // Конвертація
+            lamports: amountInUSDT * 1000000000
         });
 
         transaction.add(transferInstruction);
@@ -189,3 +188,4 @@ async function getSignaturesForAssetV2(assetId) {
         console.error("Помилка отримання історії:", error);
     }
 }
+
