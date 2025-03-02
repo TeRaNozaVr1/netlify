@@ -55,13 +55,6 @@ const walletPopup = document.getElementById("walletPopup");
             await connectWallet("phantom", true);
         }
     }
-
-    connectWalletBtn.addEventListener("click", () => connectWallet("phantom", false));
-    checkAutoConnect();
-});
-
-
-
 // Перевірка балансу перед обміном
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
