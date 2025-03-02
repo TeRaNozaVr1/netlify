@@ -10,24 +10,20 @@ document.addEventListener("DOMContentLoaded", async function () {
         walletStatus.textContent = `Connected: ${response.publicKey.toString()}`;
         connectWalletBtn.textContent = "Wallet Connected";
         connectWalletBtn.disabled = true;
-        console.log("✅ Wallet connected:", response.publicKey.toString());
+        console.log("Wallet connected:", response.publicKey.toString());
       } catch (err) {
-        console.error("❌ Connection failed:", err);
+        console.error("Connection failed:", err);
         walletStatus.textContent = "Connection failed!";
-        localStorage.removeItem("phantomWallet"); // Clear data in case of error
+        localStorage.removeItem("phantomWallet"); // Очищуємо дані у разі помилки
       }
     } else {
-      console.log("⚠️ Phantom not found. Opening app...");
+      console.log("Phantom не знайдено. Відкриваємо додаток...");
       if (/Android|iPhone/i.test(navigator.userAgent)) {
-        // ✅ Correct deeplink to ensure permission request
-        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(
-          "https://cool-kataifi-90a5d5.netlify.app"
-        )}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(
-          window.location.href
-        )}`;
+        // Правильний deeplink для мобільних додатків
+        const deeplink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent("https://cool-kataifi-90a5d5.netlify.app")}&dapp_encryption_public_key=&cluster=mainnet-beta&redirect_link=${encodeURIComponent(window.location.href)}`;
         window.location.href = deeplink;
       } else {
-        alert("Phantom Wallet not installed. Please install it from the link.");
+        alert("Phantom Wallet не встановлено. Встановіть його за посиланням.");
         window.open("https://phantom.app/", "_blank");
       }
     }
