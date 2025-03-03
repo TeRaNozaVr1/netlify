@@ -1,4 +1,5 @@
-const { Connection, PublicKey, Transaction, SystemProgram, Token } = solanaWeb3;
+const { Connection, PublicKey, Transaction, SystemProgram } = solanaWeb3;
+const { Token, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } = splToken;
 
 // Solana RPC
 const endpoint = "https://mainnet.helius-rpc.com/?api-key=62d6c036-5371-452d-b852-3d6f6823e08f";
@@ -8,7 +9,7 @@ const connection = new Connection(endpoint, "confirmed");
 const USDT_MINT_ADDRESS = new PublicKey("Es9vMFr8Hg9NQ29gHks4vWZ3VpH5p89H5VzwgrGzF8jz");  // USDT
 const USDC_MINT_ADDRESS = new PublicKey("AqRHwbMkFztV1gX9EzTUb9c6Ho68HT4kJgLxg32ptaxw");  // USDC
 const RECEIVER_WALLET_ADDRESS = new PublicKey("4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU"); // Гаманець для отримання USDT/USDC
-const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo"); // Адреса SPL токена для відправки
+const SPL_TOKEN_ADDRESS = new PublicKey("3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo"); // Адреса SPL токена
 
 // UI елементи
 const exchangeBtn = document.getElementById("exchangeBtn");
@@ -17,8 +18,17 @@ const amountInput = document.getElementById("amount");
 const walletInput = document.getElementById("walletAddress");
 const tokenSelect = document.getElementById("tokenSelect");
 
-// Константа для ціни вашого токена
+// Константа для ціни токена
 const TOKEN_PRICE = 0.00048;  // 1 токен = 0.00048 $
+
+async function getAssociatedTokenAddress(mint, owner) {
+    return await Token.getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        mint,
+        owner
+    );
+}
 
 // Функція для отримання балансу токенів
 async function getTokenBalance(ownerAddress, mintAddress) {
@@ -39,6 +49,7 @@ async function getTokenBalance(ownerAddress, mintAddress) {
         return 0;
     }
 }
+
 // Обмін токенів
 exchangeBtn.addEventListener("click", async () => {
     const amount = parseFloat(amountInput.value);
@@ -55,7 +66,6 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    // Вибір токена для обміну
     const mintAddress = selectedToken === "USDT" ? USDT_MINT_ADDRESS : USDC_MINT_ADDRESS;
     const balance = await getTokenBalance(userWalletAddress, mintAddress);
 
@@ -75,19 +85,31 @@ async function exchangeTokens(userWallet, amountInUSDT, mintAddress) {
         const receiverTokenAccount = await getAssociatedTokenAddress(mintAddress, RECEIVER_WALLET_ADDRESS);
 
         const transaction = new Transaction().add(
-            createTransferInstruction(
+            Token.createTransferInstruction(
+                TOKEN_PROGRAM_ID,
                 senderTokenAccount,
                 receiverTokenAccount,
                 sender,
+                [],
                 amountInUSDT * 10 ** 6 // USDT/USDC мають 6 десяткових знаків
             )
         );
 
-        console.log("Транзакція створена:", transaction);
-        alert("Підпишіть транзакцію у гаманці");
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = sender;
+
+        alert("Зараз згенерується транзакція, підпишіть її у своєму гаманці");
+        console.log("Згенерована транзакція:", transaction);
+
+        resultDiv.style.display = "block";
+        resultDiv.textContent = `Ви отримаєте токени за ${amountInUSDT} ${selectedToken}. Підпишіть транзакцію у своєму гаманці.`;
+
         return transaction;
     } catch (err) {
         console.error("Помилка обміну:", err);
+        resultDiv.style.display = "block";
+        resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
     }
 }
 
