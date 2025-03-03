@@ -4,7 +4,8 @@ import { getOrCreateAssociatedTokenAccount, createTransferInstruction } from "@s
 const OWNER_WALLET = "4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU";
 const SPL_TOKEN_MINT = "3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo";
 const TOKEN_PRICE = 0.00048;
-const SOLANA_RPC_URL = `https://api.mainnet-beta.solana.com`;
+const SOLANA_RPC_URL = "https://cors-anywhere.herokuapp.com/https://api.mainnet-beta.solana.com";
+
 const connection = new Connection(SOLANA_RPC_URL, "confirmed");
 
 let selectedWallet = null;
