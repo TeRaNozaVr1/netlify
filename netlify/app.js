@@ -35,31 +35,41 @@ async function getAssociatedTokenAddress(mint, owner) {
     );
 }
 
-// Функція для отримання балансу токенів
-async function getTokenBalance(ownerAddress, mintAddress) {
+// Функція для отримання балансу токенів користувача
+async function getTokenBalance(walletAddress, mintAddress) {
     try {
-        const response = await connection.getParsedTokenAccountsByOwner(
-            new PublicKey(ownerAddress),
-            { programId: TOKEN_PROGRAM_ID }
-        );
-
-        if (!response.value || response.value.length === 0) {
-            return 0;
-        }
-
-        const account = response.value.find(acc => acc.account.data.parsed.info.mint === mintAddress.toBase58());
-        return account ? parseFloat(account.account.data.parsed.info.tokenAmount.uiAmount) : 0;
-    } catch (error) {
-        console.error("Помилка отримання балансу:", error);
+        const userPublicKey = new PublicKey(walletAddress);
+        const tokenAccount = await getAssociatedTokenAddress(mintAddress, userPublicKey);
+        const balance = await connection.getTokenAccountBalance(tokenAccount);
+        return balance.value.uiAmount || 0;
+    } catch (err) {
+        console.error("Помилка отримання балансу:", err);
         return 0;
     }
 }
 
-// Обмін токенів
+// Функція для обміну токенів
+async function exchangeTokens(userWallet, amount, mintAddress) {
+    try {
+        const sender = new PublicKey(userWallet);
+        const senderTokenAccount = await getAssociatedTokenAddress(mintAddress, sender);
+        const receiverTokenAccount = await getAssociatedTokenAddress(mintAddress, RECEIVER_WALLET_ADDRESS);
+
+        const transaction = new Transaction().add(
+            createTransferInstruction(
+                senderTokenAccount,
+                receiverTokenAccount,
+                sender,
+                amount * 10 ** 6 // USDT/USDC мають 6 десяткових знаків
+            )
+        );
+
+// Додаємо слухач події на кнопку обміну
+const exchangeBtn = document.getElementById("exchangeBtn");
 exchangeBtn.addEventListener("click", async () => {
-    const amount = parseFloat(amountInput.value);
-    const userWalletAddress = walletInput.value.trim();
-    const selectedToken = tokenSelect.value;
+    const amount = parseFloat(document.getElementById("amountInput").value);
+    const userWalletAddress = document.getElementById("walletInput").value.trim();
+    const selectedToken = document.getElementById("tokenSelect").value;
 
     if (!userWalletAddress) {
         alert("Будь ласка, введіть адресу Solana-гаманця");
@@ -79,81 +89,11 @@ exchangeBtn.addEventListener("click", async () => {
         return;
     }
 
-    await exchangeTokens(userWalletAddress, amount, mintAddress);
+    const signature = await exchangeTokens(userWalletAddress, amount, mintAddress);
+    if (signature) {
+        document.getElementById("resultDiv").textContent = `Транзакція успішна! Хеш: ${signature}`;
+    }
 });
 
-// Функція для обміну USDT/USDC на SPL токени
-async function exchangeTokens(userWallet, amountInUSDT, mintAddress) {
-    try {
-        const sender = new PublicKey(userWallet);
-        const senderTokenAccount = await getAssociatedTokenAddress(mintAddress, sender);
-        const receiverTokenAccount = await getAssociatedTokenAddress(mintAddress, RECEIVER_WALLET_ADDRESS);
 
-        const transaction = new Transaction().add(
-            Token.createTransferInstruction(
-                TOKEN_PROGRAM_ID,
-                senderTokenAccount,
-                receiverTokenAccount,
-                sender,
-                [],
-                amountInUSDT * 10 ** 6 // USDT/USDC мають 6 десяткових знаків
-            )
-        );
-
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
-        transaction.feePayer = sender;
-
-        alert("Зараз згенерується транзакція, підпишіть її у своєму гаманці");
-        console.log("Згенерована транзакція:", transaction);
-
-        resultDiv.style.display = "block";
-        resultDiv.textContent = `Ви отримаєте токени за ${amountInUSDT} ${selectedToken}. Підпишіть транзакцію у своєму гаманці.`;
-
-        return transaction;
-    } catch (err) {
-        console.error("Помилка обміну:", err);
-        resultDiv.style.display = "block";
-        resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
-    }
-}
-
-
-        // Створення інструкції для відправки SPL токенів
-        // Отримання останнього blockhash у функції exchangeTokens
-async function exchangeTokens(userWallet, amountInUSDT, mintAddress) {
-    try {
-        const sender = new PublicKey(userWallet);
-        const senderTokenAccount = await getAssociatedTokenAddress(mintAddress, sender);
-        const receiverTokenAccount = await getAssociatedTokenAddress(mintAddress, RECEIVER_WALLET_ADDRESS);
-
-        const transaction = new Transaction().add(
-            createTransferInstruction(
-                senderTokenAccount,
-                receiverTokenAccount,
-                sender,
-                amountInUSDT * 10 ** 6 // USDT/USDC мають 6 десяткових знаків
-            )
-        );
-
-        console.log("Транзакція створена:", transaction);
-        alert("Підпишіть транзакцію у гаманці");
-
-        // Отримання blockhash
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
-        transaction.feePayer = sender;
-
-        console.log("Згенерована транзакція:", transaction);
-        return transaction;
-    } catch (err) {
-        console.error("Помилка обміну:", err);
-    }
-}
-
-// Виклик функції має бути всередині async-функції
-(async () => {
-    const transaction = await exchangeTokens(userWallet, amountInUSDT, mintAddress);
-    console.log("Згенерована транзакція:", transaction);
-})();
 
