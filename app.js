@@ -1,22 +1,50 @@
 import { Connection, PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
 import { getOrCreateAssociatedTokenAccount, createTransferInstruction } from "@solana/spl-token";
 
-const OWNER_WALLET = "4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU"; // Гаманець для отримання USDT/USDC
-const SPL_TOKEN_MINT = "3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo"; // Токен користувача
-const TOKEN_PRICE = 0.00048; // Ціна 1 токена у USD
+const OWNER_WALLET = "4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU";
+const SPL_TOKEN_MINT = "3EwV6VTHYHrkrZ3UJcRRAxnuHiaeb8EntqX85Khj98Zo";
+const TOKEN_PRICE = 0.00048;
 const SOLANA_RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`;
 const connection = new Connection(SOLANA_RPC_URL, "confirmed");
 
-document.addEventListener("DOMContentLoaded", () => {
-    const exchangeBtn = document.getElementById("exchangeBtn");
+let selectedWallet = null;
 
-    exchangeBtn.addEventListener("click", async () => {
-        const walletAddress = document.getElementById("walletAddress").value.trim();
+// Функція підключення до гаманця
+async function connectWallet() {
+    if (window.solana && window.solana.isPhantom) {
+        selectedWallet = "Phantom";
+    } else if (window.solflare) {
+        selectedWallet = "Solflare";
+    } else {
+        alert("Гаманець Solana не знайдено. Встановіть Phantom або Solflare.");
+        return;
+    }
+
+    try {
+        await window.solana.connect();
+        const publicKey = window.solana.publicKey.toBase58();
+        document.getElementById("walletStatus").innerText = `Підключено: ${publicKey} (${selectedWallet})`;
+        console.log(`✅ Підключено до ${selectedWallet}:`, publicKey);
+    } catch (error) {
+        console.error("Помилка підключення:", error);
+        alert("Не вдалося підключитися до гаманця.");
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
+    document.getElementById("exchangeBtn").addEventListener("click", async () => {
+        if (!window.solana || !window.solana.isConnected) {
+            alert("Будь ласка, спочатку підключіть гаманець!");
+            return;
+        }
+
+        const walletAddress = window.solana.publicKey.toBase58();
         const token = document.getElementById("tokenSelect").value;
         const amount = parseFloat(document.getElementById("amount").value);
 
-        if (!walletAddress || !Number.isFinite(amount) || amount <= 0) {
-            alert("Будь ласка, введіть коректні дані!");
+        if (!Number.isFinite(amount) || amount <= 0) {
+            alert("Будь ласка, введіть коректну суму!");
             return;
         }
 
@@ -44,45 +72,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-export async function generateSHA256(input) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(input);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(byte => byte.toString(16).padStart(2, "0")).join("");
-}
-
-export async function getBalance(walletAddress) {
+async function sendTransaction(sender, recipient, amount, token) {
     try {
-        if (!walletAddress) {
-            throw new Error("Гаманець не може бути порожнім.");
-        }
-        const publicKey = new PublicKey(walletAddress);
-        const balance = await connection.getBalance(publicKey);
-        return balance / 10 ** 9;
-    } catch (error) {
-        console.error("Помилка отримання балансу:", error.message);
-        return null;
-    }
-}
-
-export async function sendTransaction(sender, recipient, amount, token) {
-    try {
-        if (!window.solana) {
-            throw new Error("Phantom гаманець не знайдено. Переконайтесь, що він встановлений.");
-        }
         const wallet = window.solana;
-        if (!wallet.isConnected) {
-            await wallet.connect();
-        }
-
-        const userPublicKey = wallet.publicKey.toBase58();
-        console.log("Авторизований гаманець:", userPublicKey);
-
-        if (sender !== userPublicKey) {
-            console.error("❌ ПОМИЛКА: Відправник не співпадає з авторизованим гаманцем!");
-            alert("Помилка: Відправник не співпадає з вашим гаманцем!");
-            return;
+        if (!wallet || !wallet.isConnected) {
+            throw new Error("Гаманець не підключений.");
         }
 
         const senderPubKey = new PublicKey(sender);
@@ -102,16 +96,13 @@ export async function sendTransaction(sender, recipient, amount, token) {
             }));
         }
 
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
         transaction.feePayer = wallet.publicKey;
+        transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
         try {
-            const signedTransaction = await wallet.signTransaction(transaction);
-            const txId = await connection.sendRawTransaction(signedTransaction.serialize());
-            await connection.confirmTransaction(txId, "confirmed");
-            console.log("✅ Transaction ID:", txId);
-            return txId;
+            const signedTx = await wallet.signAndSendTransaction(transaction);
+            console.log("✅ Transaction ID:", signedTx.signature);
+            return signedTx.signature;
         } catch (signError) {
             throw new Error("Користувач відхилив запит на підпис транзакції.");
         }
