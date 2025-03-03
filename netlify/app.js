@@ -94,7 +94,10 @@ async function exchangeTokens(userWallet, amountInUSDT, mintAddress) {
 
         // Створення інструкції для відправки SPL токенів
         const token = new Token(connection, SPL_TOKEN_ADDRESS, solanaWeb3.TOKEN_PROGRAM_ID, sender); // Ініціалізація токена
-        const senderTokenAccount = await token.getOrCreateAssociatedAccountInfo(sender); // Отримання токен-аккаунту користувача
+        (async () => {
+    const transaction = await exchangeTokens(userWallet, amountInUSDT, mintAddress);
+    console.log("Згенерована транзакція:", transaction);
+})();
 
         const transferTokenInstruction = Token.createTransferInstruction(
             solanaWeb3.TOKEN_PROGRAM_ID,
