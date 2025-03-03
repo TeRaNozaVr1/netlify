@@ -63,9 +63,9 @@ exchangeBtn.addEventListener("click", async () => {
     const balance = await getTokenBalance(userWalletAddress, mintAddress);
 
     if (balance < amount) {
-        alert(Недостатньо коштів для обміну ${selectedToken}!);
-        return;
-    }
+    alert(`Недостатньо коштів для обміну ${selectedToken}!`);
+    return;
+}
 
     await exchangeTokens(userWalletAddress, amount, mintAddress);
 });
