@@ -1,5 +1,6 @@
-const { Connection, PublicKey, Transaction, SystemProgram } = solanaWeb3;
+import * as splToken from "https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/+esm";
 const { Token, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } = splToken;
+const { Connection, PublicKey, Transaction, SystemProgram } = solanaWeb3;
 
 // Solana RPC
 const endpoint = "https://mainnet.helius-rpc.com/?api-key=62d6c036-5371-452d-b852-3d6f6823e08f";
