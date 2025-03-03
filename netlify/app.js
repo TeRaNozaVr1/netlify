@@ -1,3 +1,6 @@
+const uuid = window.uuidv4();
+console.log(uuid);
+
 import * as splToken from "https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/+esm";
 
 const { Connection, PublicKey, Transaction, Token } = solanaWeb3;
