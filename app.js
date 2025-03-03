@@ -94,7 +94,7 @@ export async function sendTransaction(sender, recipient, amount, token) {
 
         const { blockhash } = await connection.getLatestBlockhash();
         transaction.recentBlockhash = blockhash;
-        transaction.feePayer = senderPubKey;
+        transaction.feePayer = wallet.publicKey;
 
         try {
             const signedTransaction = await wallet.signTransaction(transaction);
