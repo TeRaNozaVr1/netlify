@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "https://cdn.jsdelivr.net/npm/uuid@latest/+esm";
 const uuid = require('uuid').v4;
 import * as splToken from "https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/+esm";
 
