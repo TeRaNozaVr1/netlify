@@ -20,28 +20,25 @@ const tokenSelect = document.getElementById("tokenSelect");
 // Константа для ціни вашого токена
 const TOKEN_PRICE = 0.00048;  // 1 токен = 0.00048 $
 
+// Функція для отримання балансу токенів
 async function getTokenBalance(ownerAddress, mintAddress) {
     try {
-        const mintPubKey = new PublicKey(mintAddress);
-        const ownerPubKey = new PublicKey(ownerAddress);
-        const response = await connection.getParsedTokenAccountsByOwner(ownerPubKey, { mint: mintPubKey });
+        const response = await connection.getParsedTokenAccountsByOwner(
+            new PublicKey(ownerAddress),
+            { programId: TOKEN_PROGRAM_ID }
+        );
 
         if (!response.value || response.value.length === 0) {
-            console.log("Користувач не має акаунта для цього токена. Створюємо акаунт...");
-            // Створення акаунта для токена
-            const token = new Token(connection, mintPubKey, solanaWeb3.TOKEN_PROGRAM_ID, ownerPubKey);
-            const associatedTokenAccount = await token.getOrCreateAssociatedAccountInfo(ownerPubKey);
-            console.log("Створено токен-акаунт:", associatedTokenAccount);
             return 0;
         }
 
-        return parseFloat(response.value[0].account.data.parsed.info.tokenAmount.uiAmount);
+        const account = response.value.find(acc => acc.account.data.parsed.info.mint === mintAddress.toBase58());
+        return account ? parseFloat(account.account.data.parsed.info.tokenAmount.uiAmount) : 0;
     } catch (error) {
         console.error("Помилка отримання балансу:", error);
         return 0;
     }
 }
-
 // Обмін токенів
 exchangeBtn.addEventListener("click", async () => {
     const amount = parseFloat(amountInput.value);
@@ -71,22 +68,29 @@ exchangeBtn.addEventListener("click", async () => {
 });
 
 // Функція для обміну USDT/USDC на SPL токени
-async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
+async function exchangeTokens(userWallet, amountInUSDT, mintAddress) {
     try {
-        // Розрахунок кількості токенів, яку отримає користувач
-        const tokensToSend = Math.floor(amountInUSDT / TOKEN_PRICE);  // Кількість токенів, яку отримує користувач
+        const sender = new PublicKey(userWallet);
+        const senderTokenAccount = await getAssociatedTokenAddress(mintAddress, sender);
+        const receiverTokenAccount = await getAssociatedTokenAddress(mintAddress, RECEIVER_WALLET_ADDRESS);
 
-        const transaction = new Transaction();
-        const sender = new PublicKey(userWalletAddress);
+        const transaction = new Transaction().add(
+            createTransferInstruction(
+                senderTokenAccount,
+                receiverTokenAccount,
+                sender,
+                amountInUSDT * 10 ** 6 // USDT/USDC мають 6 десяткових знаків
+            )
+        );
 
-        // Створення інструкції для переведення USDT/USDC на гаманець 4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU
-        const transferInstruction = SystemProgram.transfer({
-            fromPubkey: sender,
-            toPubkey: RECEIVER_WALLET_ADDRESS,
-            lamports: amountInUSDT * 1000000000 // Конвертація
-        });
+        console.log("Транзакція створена:", transaction);
+        alert("Підпишіть транзакцію у гаманці");
+        return transaction;
+    } catch (err) {
+        console.error("Помилка обміну:", err);
+    }
+}
 
-        transaction.add(transferInstruction);
 
         // Створення інструкції для відправки SPL токенів
         const token = new Token(connection, SPL_TOKEN_ADDRESS, solanaWeb3.TOKEN_PROGRAM_ID, sender); // Ініціалізація токена
