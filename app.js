@@ -75,6 +75,16 @@ export async function sendTransaction(sender, recipient, amount, token) {
         if (!wallet.isConnected) {
             await wallet.connect();
         }
+
+        const userPublicKey = wallet.publicKey.toBase58();
+        console.log("Авторизований гаманець:", userPublicKey);
+
+        if (sender !== userPublicKey) {
+            console.error("❌ ПОМИЛКА: Відправник не співпадає з авторизованим гаманцем!");
+            alert("Помилка: Відправник не співпадає з вашим гаманцем!");
+            return;
+        }
+
         const senderPubKey = new PublicKey(sender);
         const recipientPubKey = new PublicKey(recipient);
         const transaction = new Transaction();
@@ -100,6 +110,7 @@ export async function sendTransaction(sender, recipient, amount, token) {
             const signedTransaction = await wallet.signTransaction(transaction);
             const txId = await connection.sendRawTransaction(signedTransaction.serialize());
             await connection.confirmTransaction(txId, "confirmed");
+            console.log("✅ Transaction ID:", txId);
             return txId;
         } catch (signError) {
             throw new Error("Користувач відхилив запит на підпис транзакції.");
