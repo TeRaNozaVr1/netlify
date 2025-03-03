@@ -1,4 +1,5 @@
-import { createTransferCheckedInstruction, getAssociatedTokenAddress } from "@solana/spl-token";
+import * as splToken from "https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/+esm";
+
 const { Connection, PublicKey, Transaction, Token } = solanaWeb3;
 
 // Solana RPC
