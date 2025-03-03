@@ -1,5 +1,9 @@
-import * as splToken from "https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/+esm";
-const { Token, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } = splToken;
+import {
+    getAssociatedTokenAddress,
+    createTransferInstruction,
+    TOKEN_PROGRAM_ID
+} from "https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/+esm";
+
 const { Connection, PublicKey, Transaction, SystemProgram } = solanaWeb3;
 
 // Solana RPC
