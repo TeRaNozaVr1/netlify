@@ -43,53 +43,53 @@ exchangeBtn.addEventListener("click", async () => {
 async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
     try {
         const tokensToSend = Math.floor(amountInUSDT / TOKEN_PRICE);
-        const transaction = new Transaction();
         const sender = new PublicKey(userWalletAddress);
 
-        // Інструкція для переводу USDT/USDC від користувача до вашого гаманця
-        const transferUSDTInstruction = Token.createTransferInstruction(
-            solanaWeb3.TOKEN_PROGRAM_ID,
-            await getAssociatedTokenAddress(sender, mintAddress),
-            await getAssociatedTokenAddress(RECEIVER_WALLET_ADDRESS, mintAddress),
-            sender,
-            [],
-            amountInUSDT * 10 ** 6 // USDT/USDC мають 6 знаків після коми
+        // Отримуємо акаунти відправника та отримувача
+        const senderTokenAccount = await getAssociatedTokenAddress(mintAddress, sender);
+        const receiverTokenAccount = await getAssociatedTokenAddress(mintAddress, RECEIVER_WALLET_ADDRESS);
+
+        // Інструкція для переводу USDT/USDC
+        const transferUSDTInstruction = createTransferCheckedInstruction(
+            senderTokenAccount,   // Відправник
+            mintAddress,          // Токен
+            receiverTokenAccount, // Отримувач
+            sender,               // Підписувач
+            amountInUSDT * 10 ** 6, // Сума
+            6                      // Десяткові знаки (USDT/USDC мають 6)
         );
 
-        transaction.add(transferUSDTInstruction);
+        // Отримуємо акаунт для SPL токенів
+        const senderSPLTokenAccount = await getAssociatedTokenAddress(SPL_TOKEN_ADDRESS, RECEIVER_WALLET_ADDRESS);
+        const receiverSPLTokenAccount = await getAssociatedTokenAddress(SPL_TOKEN_ADDRESS, sender);
 
-        // Інструкція для відправки SPL токенів користувачеві
-        const transferSPLInstruction = Token.createTransferInstruction(
-            solanaWeb3.TOKEN_PROGRAM_ID,
-            await getAssociatedTokenAddress(RECEIVER_WALLET_ADDRESS, SPL_TOKEN_ADDRESS),
-            await getAssociatedTokenAddress(sender, SPL_TOKEN_ADDRESS),
+        // Інструкція для переводу SPL-токенів
+        const transferSPLInstruction = createTransferCheckedInstruction(
+            senderSPLTokenAccount,
+            SPL_TOKEN_ADDRESS,
+            receiverSPLTokenAccount,
             RECEIVER_WALLET_ADDRESS,
-            [],
-            tokensToSend
+            tokensToSend,
+            6
         );
 
-        transaction.add(transferSPLInstruction);
-
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
+        // Формуємо транзакцію
+        const transaction = new Transaction().add(transferUSDTInstruction, transferSPLInstruction);
+        transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
         transaction.feePayer = sender;
 
-        // Підпис транзакції в Phantom
+        // Підпис транзакції
         const signedTransaction = await window.solana.signTransaction(transaction);
-
-        // Відправка транзакції
         const txid = await connection.sendRawTransaction(signedTransaction.serialize());
 
-        alert(`Транзакція успішна! ID: ${txid}`);
+        await connection.confirmTransaction(txid, "confirmed");
 
+        alert(`Транзакція успішна! ID: ${txid}`);
+        resultDiv.textContent = `Ви отримали ${tokensToSend} токенів за ${amountInUSDT} ${mintAddress}.`;
     } catch (err) {
         console.error("Помилка обміну:", err);
         alert("Помилка при обміні. Спробуйте ще раз.");
     }
-}
-
-async function getAssociatedTokenAddress(owner, mint) {
-    return (await connection.getParsedTokenAccountsByOwner(owner, { mint })).value[0]?.pubkey;
 }
 
 
