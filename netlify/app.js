@@ -115,35 +115,40 @@ async function exchangeTokens(userWallet, amountInUSDT, mintAddress) {
 
 
         // Створення інструкції для відправки SPL токенів
-        const token = new Token(connection, SPL_TOKEN_ADDRESS, solanaWeb3.TOKEN_PROGRAM_ID, sender); // Ініціалізація токена
-        (async () => {
-    const transaction = await exchangeTokens(userWallet, amountInUSDT, mintAddress);
-    console.log("Згенерована транзакція:", transaction);
-})();
+        // Отримання останнього blockhash у функції exchangeTokens
+async function exchangeTokens(userWallet, amountInUSDT, mintAddress) {
+    try {
+        const sender = new PublicKey(userWallet);
+        const senderTokenAccount = await getAssociatedTokenAddress(mintAddress, sender);
+        const receiverTokenAccount = await getAssociatedTokenAddress(mintAddress, RECEIVER_WALLET_ADDRESS);
 
-        const transferTokenInstruction = Token.createTransferInstruction(
-            solanaWeb3.TOKEN_PROGRAM_ID,
-            senderTokenAccount.address, // Адреса токен-аккаунту користувача
-            RECEIVER_WALLET_ADDRESS, // Адреса отримувача
-            sender, // Підписант
-            [],
-            tokensToSend // Кількість токенів для відправки
+        const transaction = new Transaction().add(
+            createTransferInstruction(
+                senderTokenAccount,
+                receiverTokenAccount,
+                sender,
+                amountInUSDT * 10 ** 6 // USDT/USDC мають 6 десяткових знаків
+            )
         );
 
-        transaction.add(transferTokenInstruction);
+        console.log("Транзакція створена:", transaction);
+        alert("Підпишіть транзакцію у гаманці");
 
+        // Отримання blockhash
         const { blockhash } = await connection.getLatestBlockhash();
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = sender;
 
-        alert("Зараз згенерується транзакція, підпишіть її у своєму гаманці");
         console.log("Згенерована транзакція:", transaction);
-
-        resultDiv.style.display = "block";
-        resultDiv.textContent = `Ви отримаєте ${tokensToSend} токенів за ${amountInUSDT} ${selectedToken}. Підпишіть транзакцію у своєму гаманці.`;
+        return transaction;
     } catch (err) {
         console.error("Помилка обміну:", err);
-        resultDiv.style.display = "block";
-        resultDiv.textContent = "Помилка при обміні. Спробуйте ще раз.";
     }
 }
+
+// Виклик функції має бути всередині async-функції
+(async () => {
+    const transaction = await exchangeTokens(userWallet, amountInUSDT, mintAddress);
+    console.log("Згенерована транзакція:", transaction);
+})();
+
