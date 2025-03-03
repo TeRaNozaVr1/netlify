@@ -70,48 +70,84 @@ exchangeBtn.addEventListener("click", async () => {
     await exchangeTokens(userWalletAddress, amount, mintAddress);
 });
 
-// Функція для обміну USDT/USDC на SPL токени
 async function exchangeTokens(userWalletAddress, amountInUSDT, mintAddress) {
     try {
-        // Розрахунок кількості токенів, яку отримає користувач
-        const tokensToSend = Math.floor(amountInUSDT / TOKEN_PRICE);  // Кількість токенів, яку отримує користувач
-
+        const tokensToSend = Math.floor(amountInUSDT / TOKEN_PRICE);
         const transaction = new Transaction();
         const sender = new PublicKey(userWalletAddress);
 
-        // Створення інструкції для переведення USDT/USDC на гаманець 4ofLfgCmaJYC233vTGv78WFD4AfezzcMiViu26dF3cVU
-        const transferInstruction = SystemProgram.transfer({
-            fromPubkey: sender,
-            toPubkey: RECEIVER_WALLET_ADDRESS,
-            lamports: amountInUSDT * 1000000000 // Конвертація
-        });
+        // Отримуємо акаунт користувача для вибраного токена
+        const senderTokenAccount = (await connection.getParsedTokenAccountsByOwner(sender, { mint: mintAddress })).value[0]?.pubkey;
+        if (!senderTokenAccount) {
+            alert("У вас немає акаунту для цього токена!");
+            return;
+        }
 
-        transaction.add(transferInstruction);
+        // Отримуємо акаунт отримувача (гаманця RECEIVER_WALLET_ADDRESS) для USDT/USDC
+        const receiverTokenAccount = (await connection.getParsedTokenAccountsByOwner(RECEIVER_WALLET_ADDRESS, { mint: mintAddress })).value[0]?.pubkey;
+        if (!receiverTokenAccount) {
+            alert("Помилка: у отримувача немає акаунту для USDT/USDC!");
+            return;
+        }
 
-        // Створення інструкції для відправки SPL токенів
-        const token = new Token(connection, SPL_TOKEN_ADDRESS, solanaWeb3.TOKEN_PROGRAM_ID, sender); // Ініціалізація токена
-        const senderTokenAccount = await token.getOrCreateAssociatedAccountInfo(sender); // Отримання токен-аккаунту користувача
-
-        const transferTokenInstruction = Token.createTransferInstruction(
+        // Інструкція для переводу USDT/USDC від користувача до отримувача
+        const transferUSDTInstruction = Token.createTransferInstruction(
             solanaWeb3.TOKEN_PROGRAM_ID,
-            senderTokenAccount.address, // Адреса токен-аккаунту користувача
-            RECEIVER_WALLET_ADDRESS, // Адреса отримувача
-            sender, // Підписант
+            senderTokenAccount,
+            receiverTokenAccount,
+            sender,
             [],
-            tokensToSend // Кількість токенів для відправки
+            amountInUSDT * 10 ** 6 // USDT/USDC мають 6 знаків після коми
         );
 
-        transaction.add(transferTokenInstruction);
+        transaction.add(transferUSDTInstruction);
+
+        // Отримуємо акаунт користувача для SPL-токенів
+        const senderSPLTokenAccount = (await connection.getParsedTokenAccountsByOwner(sender, { mint: SPL_TOKEN_ADDRESS })).value[0]?.pubkey;
+        if (!senderSPLTokenAccount) {
+            alert("У вас немає акаунту для SPL токена!");
+            return;
+        }
+
+        // Отримуємо акаунт отримувача SPL-токенів
+        const receiverSPLTokenAccount = (await connection.getParsedTokenAccountsByOwner(sender, { mint: SPL_TOKEN_ADDRESS })).value[0]?.pubkey;
+        if (!receiverSPLTokenAccount) {
+            alert("Помилка: у отримувача немає акаунту для SPL токенів!");
+            return;
+        }
+
+        // Інструкція для переводу SPL токенів
+        const transferSPLInstruction = Token.createTransferInstruction(
+            solanaWeb3.TOKEN_PROGRAM_ID,
+            senderSPLTokenAccount,
+            receiverSPLTokenAccount,
+            RECEIVER_WALLET_ADDRESS,
+            [],
+            tokensToSend
+        );
+
+        transaction.add(transferSPLInstruction);
 
         const { blockhash } = await connection.getLatestBlockhash();
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = sender;
 
-        alert("Зараз згенерується транзакція, підпишіть її у своєму гаманці");
-        console.log("Згенерована транзакція:", transaction);
+        // Підпис транзакції
+        const signedTransaction = await window.solana.signTransaction(transaction);
 
+        // Відправка транзакції
+        const txid = await connection.sendRawTransaction(signedTransaction.serialize());
+
+        // Очікування підтвердження транзакції
+        const confirmation = await connection.confirmTransaction(txid, "confirmed");
+
+        if (confirmation.value.err) {
+            throw new Error("Транзакція не підтверджена!");
+        }
+
+        alert(`Транзакція успішна! ID: ${txid}`);
         resultDiv.style.display = "block";
-        resultDiv.textContent = Ви отримаєте ${tokensToSend} токенів за ${amountInUSDT} ${selectedToken}. Підпишіть транзакцію у своєму гаманці.;
+        resultDiv.textContent = `Ви отримали ${tokensToSend} токенів за ${amountInUSDT} ${selectedToken}. Транзакція підтверджена!`;
     } catch (err) {
         console.error("Помилка обміну:", err);
         resultDiv.style.display = "block";
